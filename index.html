@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <link rel="stylesheet" href="./src/style.css">
+  <style>
+    * {
+      font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif
+    }
+
+    #welcomeDisplay {
+      padding: 2rem;
+      border: 1px solid blue;
+      width: 50%;
+      text-align: center;
+      height: min-content;
+      margin-top: 5rem;
+    }
+  </style>
+</head>
+
+<body style="display: flex; justify-content: center;">
+  <div id="welcomeDisplay">
+    <h3>Welcome to Tetris, but Reversed</h3>
+    <h4>To rotate a piece, press &darr;</h4>
+    <h4>To move the piece to the top instantly, press space bar</h4>
+    <h4>To move the piece up, press &uarr;</h4>
+    <h4>And to start the game, press space bar</h4>
+  </div>
+  <main></main>
+</body>
+<script type="module" src="/src/main.ts"></script>
+
+</html>
