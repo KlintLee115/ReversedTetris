@@ -1,4 +1,5 @@
-const COLORS = ["blue", "red", "purple", "green", "indigo"];
+import { DEFAULT_COLOR, LANDING_COLOR, playingArea, resetLandingCoors } from "./main";
+import { COLORS } from "./utility/colors";
 
 const COOR = {
     Row: 0,
@@ -7,123 +8,89 @@ const COOR = {
 
 export abstract class TetrisPiece {
 
-    protected color: string;
-    protected id: number;
+    private id: number;
+    private static CURR_COLOR_IDX = 0;
+
     protected centerCoor: [number, number];
     protected orientationIDX: number;
-    protected coor: [number, number][];
+
+    public color: string;
+    public coor: [number, number][];
 
     constructor(newId: number) {
-        this.color = COLORS[Math.floor(Math.random() * 5)];
+        this.color = COLORS[TetrisPiece.CURR_COLOR_IDX];
         this.id = newId;
         this.centerCoor = [21, Math.floor(Math.random() * 7)];
         this.orientationIDX = Math.floor(Math.random() * this.getOrientations().length);
         this.coor = this.getOrientations()[this.orientationIDX];
         this.adjustPiecePositionToBoundary();
+
+        if (TetrisPiece.CURR_COLOR_IDX === COLORS.length - 1) TetrisPiece.CURR_COLOR_IDX = 0
+        else TetrisPiece.CURR_COLOR_IDX++
     }
 
-    protected abstract getOrientations(): [number, number][][];
+    protected abstract getOrientations(): [number, number][][]
 
-    setId = (newId: number) => this.id = newId;
+    setId = (newId: number) => this.id = newId
 
-    getId = () => this.id;
+    getId = () => this.id
 
-    getCoor = () => this.coor;
+    private canMove(newCoor: [number, number][]): boolean {
+        return newCoor.every(([row, col]) => {
+            const rowElement = playingArea.children.item(row) as HTMLElement
+            const colElement = rowElement?.children.item(col) as HTMLElement
+            return colElement && (colElement.style.backgroundColor === DEFAULT_COLOR || parseInt(colElement.id) === this.id)
+        });
+    }
 
-    getColor = () => this.color;
-
-    rotate(playingArea: any) {
+    rotate() {
 
         const newOrientationIdx = this.orientationIDX === this.getOrientations().length - 1 ? 0 : this.orientationIDX + 1;
 
         const newCoor = this.getOrientations()[newOrientationIdx];
 
-        let canRotate = true;
-
-        for (const pieceCoor of newCoor) {
-            const boardRow = playingArea.children.item(pieceCoor[0]);
-
-            if (!boardRow) {
-                canRotate = false;
-                break;
-            }
-
-            const boardCoor = boardRow.children.item(pieceCoor[1]);
-
-            if (!boardCoor || (boardCoor.style.backgroundColor !== "white" && parseInt(boardCoor.id) !== this.id)) {
-                canRotate = false;
-                break;
-            }
-        }
-
-        if (canRotate) {
+        if (this.canMove(newCoor)) {
             this.orientationIDX = newOrientationIdx;
             this.coor = newCoor;
+            resetLandingCoors();
         }
     }
 
-    hitTop(playingArea: any) {
-        const coors = this.getCoor();
-
-        for (let i = 0; i < coors.length; i++) {
-            const [row, col] = coors[i];
-            const rowAbove = playingArea.children.item(row - 1);
-
-            if (!rowAbove) return true;
-
-            if (rowAbove.children.item(col).style.backgroundColor !== 'white' && parseInt(rowAbove.children.item(col).id) !== this.getId()) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    canMoveRight(playingArea: any) {
-
-        return this.getCoor().every((item) => {
-            const pieceRight = playingArea.children.item(item[0]).children.item(item[1] + 1);
-
-            return pieceRight && ((parseInt(pieceRight.id) === this.id) || pieceRight.style.backgroundColor === 'white');
+    hitTop() {
+        return this.coor.some(([row, col]) => {
+            const rowAbove = playingArea.children.item(row - 1) as HTMLElement;
+            const boxAbove = rowAbove?.children.item(col) as HTMLElement;
+            return row === 0 || (boxAbove && ![DEFAULT_COLOR, LANDING_COLOR].includes(boxAbove.style.backgroundColor) && parseInt(boxAbove.id) !== this.id);
         });
     }
 
-    canMoveLeft(playingArea: any) {
-        return this.getCoor().every((item) => {
-            const pieceLeft = playingArea.children.item(item[0]).children.item(item[1] - 1);
+    canMoveRight = () => this.canMove(this.coor.map(([row, col]) => [row, col + 1] as [number, number]))
 
-            return pieceLeft && ((parseInt(pieceLeft.id) === this.id) || pieceLeft.style.backgroundColor === 'white');
-        });
-    }
+    canMoveLeft = () => this.canMove(this.coor.map(([row, col]) => [row, col - 1] as [number, number]))
 
-    canMoveUp(playingArea: any) {
-        return this.getCoor().every((item) => {
-            const rowAbove = playingArea.children.item(item[0] - 1);
-
-            if (!rowAbove) return false;
-            const pieceAbove = rowAbove.children.item(item[1]);
-
-            return rowAbove && ((parseInt(pieceAbove.id) === this.id) || pieceAbove.style.backgroundColor === 'white');
-        });
-    }
+    canMoveUp = () => this.canMove(this.coor.map(([row, col]) => [row - 1, col] as [number, number]));
 
     shiftCoor(rowOrCol: number, magnitude: number) {
         this.centerCoor[rowOrCol === COOR.Row ? COOR.Row : COOR.Col] += magnitude;
         this.coor = this.getOrientations()[this.orientationIDX];
+
+        // reset landing coors only if action is not move up
+        if (!(rowOrCol == 0 && magnitude == -1)) resetLandingCoors()
     }
 
-    moveRight = () => this.shiftCoor(1, 1);
+    moveRight = () => this.shiftCoor(1, 1)
 
-    moveLeft = () => this.shiftCoor(1, -1);
+    moveLeft = () => this.shiftCoor(1, -1)
 
     moveUp = () => this.shiftCoor(0, -1);
 
-    upAllTheWay(playingArea: any) {
-        while (!this.hitTop(playingArea)) this.moveUp();
+    upAllTheWay() {
+        while (!this.hitTop()) this.moveUp();
         this.coor = this.getOrientations()[this.orientationIDX];
     }
 
     adjustPiecePositionToBoundary() {
-        this.getCoor().forEach((elementCoor) => {
+        this.coor.forEach((elementCoor) => {
 
             if (elementCoor[1] > 7) this.centerCoor[1] -= elementCoor[1] - 7;
 
@@ -135,73 +102,70 @@ export abstract class TetrisPiece {
 }
 
 class I extends TetrisPiece {
-
     protected getOrientations(): [number, number][][] {
-
-        // vertical
-        const zeroDegCoor: [number, number][] = [[this.centerCoor[0] + 1, this.centerCoor[1]], [this.centerCoor[0], this.centerCoor[1]], [this.centerCoor[0] - 1, this.centerCoor[1]], [this.centerCoor[0] - 2, this.centerCoor[1]]]
-
-        //horizontal
-        const ninetyDegCoor: [number, number][] = [[this.centerCoor[0], this.centerCoor[1] - 1], [this.centerCoor[0], this.centerCoor[1]], [this.centerCoor[0], this.centerCoor[1] + 1], [this.centerCoor[0], this.centerCoor[1] + 2]]
-
-        return [zeroDegCoor, ninetyDegCoor]
+        return [
+            [[1, 0], [0, 0], [-1, 0], [-2, 0]],
+            [[0, -1], [0, 0], [0, 1], [0, 2]]
+        ].map(orient => orient.map(([r, c]) => [this.centerCoor[0] + r, this.centerCoor[1] + c] as [number, number]));
     }
 }
 
 class J extends TetrisPiece {
-
     protected getOrientations(): [number, number][][] {
-        const zeroDegCoor: [number, number][] = [[this.centerCoor[0] - 1, this.centerCoor[1]], [this.centerCoor[0], this.centerCoor[1] + 1], [this.centerCoor[0], this.centerCoor[1]], [this.centerCoor[0], this.centerCoor[1] + 2]]
-        const ninetyDegCoor: [number, number][] = [[this.centerCoor[0], this.centerCoor[1]], [this.centerCoor[0], this.centerCoor[1] + 1], [this.centerCoor[0] + 2, this.centerCoor[1]], [this.centerCoor[0] + 1, this.centerCoor[1]]]
-        const oneEightyDegCoor: [number, number][] = [[this.centerCoor[0], this.centerCoor[1] - 1], [this.centerCoor[0], this.centerCoor[1]], [this.centerCoor[0], this.centerCoor[1] + 1], [this.centerCoor[0] + 1, this.centerCoor[1] + 1]]
-        const twoSeventyDegCoor: [number, number][] = [[this.centerCoor[0], this.centerCoor[1] - 1], [this.centerCoor[0], this.centerCoor[1]], [this.centerCoor[0] - 1, this.centerCoor[1]], [this.centerCoor[0] - 2, this.centerCoor[1]]]
-        return [zeroDegCoor, ninetyDegCoor, oneEightyDegCoor, twoSeventyDegCoor]
+        return [
+            [[-1, 0], [0, 1], [0, 0], [0, 2]],
+            [[0, 0], [0, 1], [2, 0], [1, 0]],
+            [[0, -1], [0, 0], [0, 1], [1, 1]],
+            [[0, -1], [0, 0], [-1, 0], [-2, 0]]
+        ].map(orient => orient.map(([r, c]) => [this.centerCoor[0] + r, this.centerCoor[1] + c] as [number, number]));
     }
 }
+
 class O extends TetrisPiece {
     protected getOrientations(): [number, number][][] {
-        return [[[this.centerCoor[0], this.centerCoor[1]], [this.centerCoor[0] - 1, this.centerCoor[1]], [this.centerCoor[0], this.centerCoor[1] + 1], [this.centerCoor[0] - 1, this.centerCoor[1] + 1]]]
+        return [
+            [[0, 0], [-1, 0], [0, 1], [-1, 1]]
+        ].map(orient => orient.map(([r, c]) => [this.centerCoor[0] + r, this.centerCoor[1] + c] as [number, number]));
     }
-
 }
+
 class Z extends TetrisPiece {
-
     protected getOrientations(): [number, number][][] {
-        const zeroDegCoor: [number, number][] = [[this.centerCoor[0] - 1, this.centerCoor[1] - 1], [this.centerCoor[0] - 1, this.centerCoor[1]], [this.centerCoor[0], this.centerCoor[1]], [this.centerCoor[0], this.centerCoor[1] + 1]]
-        const ninetyDegCoor: [number, number][] = [[this.centerCoor[0] + 1, this.centerCoor[1] - 1], [this.centerCoor[0], this.centerCoor[1] - 1], [this.centerCoor[0], this.centerCoor[1]], [this.centerCoor[0] - 1, this.centerCoor[1]]]
-        return [zeroDegCoor, ninetyDegCoor]
+        return [
+            [[-1, -1], [-1, 0], [0, 0], [0, 1]],
+            [[1, -1], [0, -1], [0, 0], [-1, 0]]
+        ].map(orient => orient.map(([r, c]) => [this.centerCoor[0] + r, this.centerCoor[1] + c] as [number, number]));
     }
 }
+
 class L extends TetrisPiece {
-
-    protected getOrientations() {
-        const zeroDegCoor: [number, number][] = [[this.centerCoor[0] - 1, this.centerCoor[1]], [this.centerCoor[0], this.centerCoor[1]], [this.centerCoor[0], this.centerCoor[1] - 1], [this.centerCoor[0], this.centerCoor[1] - 2]]
-        const ninetyDegCoor: [number, number][] = [[this.centerCoor[0] - 2, this.centerCoor[1]], [this.centerCoor[0] - 1, this.centerCoor[1]], [this.centerCoor[0], this.centerCoor[1]], [this.centerCoor[0], this.centerCoor[1] + 1]]
-        const oneEightyDegCoor: [number, number][] = [[this.centerCoor[0], this.centerCoor[1]], [this.centerCoor[0] + 1, this.centerCoor[1]], [this.centerCoor[0], this.centerCoor[1] + 1], [this.centerCoor[0], this.centerCoor[1] + 2]]
-        const twoSeventyDegCoor: [number, number][] = [[this.centerCoor[0], this.centerCoor[1] - 1], [this.centerCoor[0], this.centerCoor[1]], [this.centerCoor[0] + 1, this.centerCoor[1]], [this.centerCoor[0] + 2, this.centerCoor[1]]]
-
-        return [zeroDegCoor, ninetyDegCoor, oneEightyDegCoor, twoSeventyDegCoor]
+    protected getOrientations(): [number, number][][] {
+        return [
+            [[-1, 0], [0, 0], [0, -1], [0, -2]],
+            [[-2, 0], [-1, 0], [0, 0], [0, 1]],
+            [[0, 0], [1, 0], [0, 1], [0, 2]],
+            [[0, -1], [0, 0], [1, 0], [2, 0]]
+        ].map(orient => orient.map(([r, c]) => [this.centerCoor[0] + r, this.centerCoor[1] + c] as [number, number]));
     }
 }
+
 class S extends TetrisPiece {
-
-    protected getOrientations() {
-        const zeroDegCoor: [number, number][] = [[this.centerCoor[0], this.centerCoor[1]], [this.centerCoor[0], this.centerCoor[1] + 1], [this.centerCoor[0] + 1, this.centerCoor[1]], [this.centerCoor[0] + 1, this.centerCoor[1] - 1]]
-        const ninetyDegCoor: [number, number][] = [[this.centerCoor[0], this.centerCoor[1] + 1], [this.centerCoor[0], this.centerCoor[1]], [this.centerCoor[0] - 1, this.centerCoor[1]], [this.centerCoor[0] + 1, this.centerCoor[1] + 1]]
-
-        return [zeroDegCoor, ninetyDegCoor]
+    protected getOrientations(): [number, number][][] {
+        return [
+            [[0, 0], [0, 1], [1, 0], [1, -1]],
+            [[0, 1], [0, 0], [-1, 0], [1, 1]]
+        ].map(orient => orient.map(([r, c]) => [this.centerCoor[0] + r, this.centerCoor[1] + c] as [number, number]));
     }
 }
 
 class T extends TetrisPiece {
-
-    protected getOrientations() {
-        const zeroDegCoor: [number, number][] = [[this.centerCoor[0], this.centerCoor[1] - 1], [this.centerCoor[0], this.centerCoor[1] + 1], [this.centerCoor[0], this.centerCoor[1]], [this.centerCoor[0] - 1, this.centerCoor[1]]]
-        const ninetyDegCoor: [number, number][] = [[this.centerCoor[0] - 1, this.centerCoor[1]], [this.centerCoor[0] + 1, this.centerCoor[1]], [this.centerCoor[0], this.centerCoor[1]], [this.centerCoor[0], this.centerCoor[1] + 1]]
-        const oneEightyDegCoor: [number, number][] = [[this.centerCoor[0], this.centerCoor[1] + 1], [this.centerCoor[0], this.centerCoor[1]], [this.centerCoor[0], this.centerCoor[1] - 1], [this.centerCoor[0] + 1, this.centerCoor[1]]]
-        const twoSeventyDegCoor: [number, number][] = [[this.centerCoor[0], this.centerCoor[1]], [this.centerCoor[0] - 1, this.centerCoor[1]], [this.centerCoor[0] + 1, this.centerCoor[1]], [this.centerCoor[0], this.centerCoor[1] - 1]]
-
-        return [zeroDegCoor, ninetyDegCoor, oneEightyDegCoor, twoSeventyDegCoor]
+    protected getOrientations(): [number, number][][] {
+        return [
+            [[0, -1], [0, 1], [0, 0], [-1, 0]],
+            [[-1, 0], [1, 0], [0, 0], [0, 1]],
+            [[0, 1], [0, 0], [0, -1], [1, 0]],
+            [[0, 0], [-1, 0], [1, 0], [0, -1]]
+        ].map(orient => orient.map(([r, c]) => [this.centerCoor[0] + r, this.centerCoor[1] + c] as [number, number]));
     }
 }
 
