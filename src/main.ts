@@ -1,5 +1,5 @@
 import { I, J, L, O, S, T, TetrisPiece, Z } from './TetrisPieces.js'
-import { colorBlock, uncolorCoors, colorPlayingArea, resetLandingCoors } from './utility/colors.js';
+import { uncolorCoors, colorPlayingArea, resetLandingCoors } from './utility/colors.js';
 
 export const tetrisPieces = [I, O, J, T, L, S, Z]
 export const DEFAULT_COLOR = "white"
