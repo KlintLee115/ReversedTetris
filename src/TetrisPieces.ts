@@ -1,5 +1,5 @@
-import { DEFAULT_COLOR, LANDING_COLOR, playingArea, resetLandingCoors } from "./main";
-import { COLORS } from "./utility/colors";
+import { DEFAULT_COLOR, playingArea } from "./main";
+import { COLORS, resetLandingCoors } from "./utility/colors";
 
 const COOR = {
     Row: 0,
@@ -57,10 +57,13 @@ export abstract class TetrisPiece {
     }
 
     hitTop() {
+
+        resetLandingCoors()
+
         return this.coor.some(([row, col]) => {
             const rowAbove = playingArea.children.item(row - 1) as HTMLElement;
             const boxAbove = rowAbove?.children.item(col) as HTMLElement;
-            return row === 0 || (boxAbove && ![DEFAULT_COLOR, LANDING_COLOR].includes(boxAbove.style.backgroundColor) && parseInt(boxAbove.id) !== this.id);
+            return row === 0 || (boxAbove && ![DEFAULT_COLOR].includes(boxAbove.style.backgroundColor) && parseInt(boxAbove.id) !== this.id);
         });
     }
 

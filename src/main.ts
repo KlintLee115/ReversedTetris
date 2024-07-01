@@ -1,8 +1,7 @@
 import { I, J, L, O, S, T, TetrisPiece, Z } from './TetrisPieces.js'
-import { colorBlock, colorLandingCoors, uncolorCoors, colorPlayingArea } from './utility/colors.js';
+import { colorBlock, uncolorCoors, colorPlayingArea, resetLandingCoors } from './utility/colors.js';
 
 export const tetrisPieces = [I, O, J, T, L, S, Z]
-export const LANDING_COLOR = "grey"
 export const DEFAULT_COLOR = "white"
 
 export const ROWS = 22;
@@ -24,13 +23,6 @@ export function setLandingCoors(_landingCoors: [number, number][]) {
 const newPiece = (id: number) => new tetrisPieces[Math.floor(Math.random() * tetrisPieces.length)](id)
 
 const shouldStartGame = (e: { keyCode: number; key: string }) => e.keyCode === 32 || e.key === " "
-
-export function resetLandingCoors() {
-
-  landingCoors.forEach(coor => colorBlock(coor[0], coor[1], DEFAULT_COLOR))
-
-  colorLandingCoors()
-}
 
 function getCompletedRows() {
 
@@ -111,8 +103,9 @@ function startNextRound() {
   currPieceID += 1
   currPiece = newPiece(currPieceID)
 
-  colorLandingCoors()
   movePieceIntoPlayingArea()
+
+  resetLandingCoors()
 
   const moveInterval = setInterval(() => {
     if (currPiece.hitTop()) {
