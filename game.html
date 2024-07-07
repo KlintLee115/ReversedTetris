@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <link rel="stylesheet" href="./src/style.css">
+    <style>
+        * {
+            font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif
+        }
+
+        #pauseScreen {
+            z-index: 3;
+            text-align: center;
+            transform: translate(-50%, -50%);
+            display: none;
+            position: absolute;
+            top: 40%;
+            left: 50%;
+            border: 1px solid black;
+            background-color: black;
+            padding: 10px;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+
+<body style="display: flex; justify-content: center;">
+    <div id="pauseScreen">
+        <h3 style="color: white;">Paused</h3>
+        <button id="continueButton">Continue</button>
+    </div>
+    <main style="display: flex; width: 100vw; margin-top: 30px; justify-content: space-evenly;"></main>
+</body>
+<script type="module" src="/src/game.ts"></script>
+
+</html>

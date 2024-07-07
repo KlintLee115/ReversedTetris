@@ -4,30 +4,42 @@
 <head>
   <link rel="stylesheet" href="./src/style.css">
   <style>
-    * {
-      font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif
-    }
-
-    #welcomeDisplay {
-      padding: 2rem;
-      border: 1px solid blue;
-      width: 50%;
-      text-align: center;
-      height: min-content;
-      margin-top: 5rem;
+    .mode-button {
+      border: 1px solid gray;
+      padding: 0.6em 1.2em;
     }
   </style>
 </head>
 
-<body style="display: flex; justify-content: center;">
-  <div id="welcomeDisplay">
+<body>
+  <div style="text-align: center; position: absolute; 
+transform: translate(50%, 50%); right: 50%; bottom: 60%; border: 1px solid blue;
+padding-block: 15px; padding-inline: 30px;">
     <h3>Welcome to Tetris, but Reversed</h3>
     <h4>To rotate a piece, press &darr;</h4>
     <h4>To move the piece to the top instantly, press space bar</h4>
     <h4>To move the piece up, press &uarr;</h4>
     <h4>And to start the game, press space bar</h4>
+
+    <div style="display: flex; justify-content: space-evenly; margin-top: 50px;">
+      <button class="mode-button" id="solo-button">SOLO</button>
+      <button class="mode-button" id="friend-button">PLAY WITH FRIEND</button>
+    </div>
+
+    <section id="friend-section" style="display: none;">
+      <div style="margin-top: 40px; display: flex; align-items: center; justify-content: center; gap: 20px;">
+        <label for="">Room ID: </label>
+        <input id="enteredRoomId" />
+        <button style="border: 1px solid black;" id="joinEnteredRoomIdButton" disabled>Join</button>
+      </div>
+
+      <div style="margin-top: 40px; display: flex; align-items: center; justify-content: center; gap: 20px;">
+        <button style="border: 1px solid black;" id="generateRoomIdButton">Generate room ID</button>
+        <h4 id="generatedRoomId"></h4>
+        <button style="border: 1px solid black; display: none;" id="joinGeneratedRoomButton">Join</button>
+      </div>
+    </section>
   </div>
-  <main></main>
 </body>
 <script type="module" src="/src/main.ts"></script>
 

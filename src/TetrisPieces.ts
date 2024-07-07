@@ -1,5 +1,7 @@
-import { DEFAULT_COLOR, playingArea } from "./main";
-import { COLORS, resetLandingCoors } from "./utility/colors";
+import { DEFAULT_COLOR, GameMode, playingArea, } from "./game";
+import { resetLandingCoors } from "./utility/colors";
+import { COLORS } from "./utility/consts";
+import { notifyMovement } from "./utility/signalR";
 
 const COOR = {
     Row: 0,
@@ -50,8 +52,14 @@ export abstract class TetrisPiece {
         const newCoor = this.getOrientations()[newOrientationIdx];
 
         if (this.canMove(newCoor)) {
+
+            const oldCoor = this.coor
+
             this.orientationIDX = newOrientationIdx;
             this.coor = newCoor;
+
+            if (GameMode === "Friend") notifyMovement(oldCoor, this.coor, this.color)
+
             resetLandingCoors();
         }
     }
@@ -74,8 +82,13 @@ export abstract class TetrisPiece {
     canMoveUp = () => this.canMove(this.coor.map(([row, col]) => [row - 1, col] as [number, number]));
 
     shiftCoor(rowOrCol: number, magnitude: number) {
+
+        const oldCoor = this.coor
+
         this.centerCoor[rowOrCol === COOR.Row ? COOR.Row : COOR.Col] += magnitude;
         this.coor = this.getOrientations()[this.orientationIDX];
+
+        if (GameMode === "Friend") notifyMovement(oldCoor, this.coor, this.color)
 
         // reset landing coors only if action is not move up
         if (!(rowOrCol == 0 && magnitude == -1)) resetLandingCoors()

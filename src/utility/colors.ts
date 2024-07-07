@@ -1,7 +1,5 @@
-import { landingCoors, getLandingCoors, currPiece, setLandingCoors, playingArea, DEFAULT_COLOR } from "../main";
+import { landingCoors, getLandingCoors, currPiece, setLandingCoors, playingArea, DEFAULT_COLOR } from "../game";
 import { TetrisPiece } from "../TetrisPieces";
-
-export const COLORS = ["indigo", "green", "red", "blue", "purple"]
 
 export function colorBlock(row: number, col: number, color: string): void {
     (playingArea.children!.item(row)!.children.item(col) as HTMLElement).style.backgroundColor = color
