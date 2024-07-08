@@ -17,6 +17,9 @@ export let playingArea: HTMLElement
 const mainArea = document.getElementsByTagName('main').item(0)!
 const pauseScreen = document.getElementById('pauseScreen')!
 const continueButton = document.getElementById('continueButton')!
+const waitingForFriendStatus = document.getElementById('waiting-for-friend-status')!
+const waitingForFriendCountdown = document.getElementById('waiting-for-friend-countdown')!
+
 let friendArea: HTMLElement
 
 // Game state
@@ -56,15 +59,18 @@ function togglePause() {
     mainArea.style.filter = "blur(10px)";
     pauseScreen.style.display = "block"
 
-    startInterval()
 }
 
 function toggleContinue() {
 
     isPaused = false;
+    waitingForFriendStatus.style.display = "none"
     mainArea.style.filter = "none";
     mainArea.style.display = "flex";
     pauseScreen.style.display = "none"
+
+    startInterval()
+
 }
 
 function inGameListener(listener: KeyboardEvent) {
@@ -240,13 +246,17 @@ window.onload = async () => {
         }
 
         window.addEventListener('keydown', inGameListener)
-        // window.onblur = () => togglePause()
+        // window.onblur = () => {
+        //     notifyPause()
+        //     togglePause()
+        // }
 
-        continueButton.addEventListener('click', () => {
-            if (GameMode === "Solo") toggleContinue()
-            else requestContinue()
+        continueButton.addEventListener('click', GameMode === "Solo" ? toggleContinue : () => {
+            waitingForFriendStatus.style.display = "block"
+            pauseScreen.style.display = "none"
+            mainArea.style.display = "none"
+            requestContinue()
         })
-
     }
 
     currPieceID = 0
@@ -275,9 +285,7 @@ window.onload = async () => {
 
 function shouldMultiGameStart(): Promise<void> {
     return new Promise((resolve, _) => {
-        connection.on('UpdateGroupCount', (cnt: number) => {
-            if (cnt === 2) resolve()
-        })
+        connection.on('UpdateGroupCount', (cnt: number) => cnt === 2 && resolve())
     })
 }
 
@@ -302,6 +310,25 @@ function setupSignalREventListeners() {
         clearInterval(currInterval)
         alert("You Won!")
     })
-    connection.on("Pause", () => togglePause())
-    connection.on("Continue", () => toggleContinue())
+    connection.on("Pause", togglePause)
+    connection.on("Continue", () => {
+
+        waitingForFriendStatus.style.display = "none"
+        waitingForFriendCountdown.style.display = "block"
+
+        let remainingSeconds = 3
+
+        let interval = setInterval(() => {
+
+            if (remainingSeconds > 0) {
+                waitingForFriendCountdown.innerHTML = remainingSeconds.toString()
+                remainingSeconds--
+            }
+            else {
+                waitingForFriendCountdown.style.display = "none"
+                clearInterval(interval)
+                toggleContinue()
+            }
+        }, 1000)
+    })
 }
