@@ -29,7 +29,7 @@ export let currPiece: TetrisPiece
 export let landingCoors: [number, number][] = []
 
 let currPieceID: number
-let currInterval: NodeJS.Timeout
+let currInterval: ReturnType<typeof setInterval>;
 let isPaused = false;
 
 export function setLandingCoors(_landingCoors: [number, number][]) {
