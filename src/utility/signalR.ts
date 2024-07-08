@@ -1,12 +1,12 @@
 import * as signalR from "@microsoft/signalr";
-import { COLORS } from "./consts";
+import { API_URL, COLORS } from "./consts";
 
 export let connection: signalR.HubConnection;
 
 export function startSignalRConnection(): Promise<void> {
     return new Promise((resolve, reject) => {
         connection = new signalR.HubConnectionBuilder()
-            .withUrl("http://localhost:5159/MessageHub")
+            .withUrl(`${API_URL}/MessageHub`)
             .withAutomaticReconnect()
             .build();
 
