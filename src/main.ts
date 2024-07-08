@@ -1,3 +1,5 @@
+import { API_URL } from "./utility/consts"
+
 const soloButton = document.getElementById('solo-button') as HTMLButtonElement
 const friendButton = document.getElementById('friend-button') as HTMLButtonElement
 const enteredRoomId = document.getElementById('enteredRoomId') as HTMLInputElement
@@ -31,7 +33,7 @@ joinEnteredRoomIdButton.addEventListener('click', () => {
 
 generateRoomIdButton.addEventListener('click', async () => {
     try {
-        const response = await fetch('http://localhost:5159/roomId') as Response
+        const response = await fetch(`${API_URL}/roomId`) as Response
         const roomId = await response.text()
 
         generatedRoomId.innerHTML = `Room ID: ${roomId}`
