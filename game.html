@@ -8,18 +8,28 @@
             font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif
         }
 
+        #waiting-for-friend-status,
+        #waiting-for-friend-countdown,
         #pauseScreen {
-            z-index: 3;
             text-align: center;
             transform: translate(-50%, -50%);
             display: none;
             position: absolute;
             top: 40%;
             left: 50%;
+        }
+
+        #pauseScreen {
+            z-index: 3;
             border: 1px solid black;
             background-color: black;
             padding: 10px;
             border-radius: 10px;
+        }
+
+        #waiting-for-friend-status,
+        #waiting-for-friend-countdown {
+            font-size: 50px;
         }
     </style>
 </head>
@@ -30,13 +40,8 @@
         <button id="continueButton">Continue</button>
     </div>
     <div>
-        <h3 id="waiting-for-friend-status" style="display: none;">Waiting for friend</h3>
-        <h3 id="waiting-for-friend-countdown" style="display: none; position: absolute; 
-         transform: translate(-50%, -50%);
-         font-size: 50px;
-            top: 50%;
-            left: 50%;
-            "></h3>
+        <h3 id="waiting-for-friend-status">Waiting for friend</h3>
+        <h3 id="waiting-for-friend-countdown"></h3>
     </div>
     <main style="display: flex; width: 100vw; margin-top: 30px; justify-content: space-evenly;"></main>
 </body>

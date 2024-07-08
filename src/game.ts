@@ -58,6 +58,7 @@ function togglePause() {
 
     mainArea.style.filter = "blur(10px)";
     pauseScreen.style.display = "block"
+    waitingForFriendStatus.style.display = "none"
 
 }
 
@@ -84,7 +85,11 @@ function inGameListener(listener: KeyboardEvent) {
         ArrowLeft: () => currPiece.canMoveLeft() && currPiece.moveLeft(),
         ArrowRight: () => currPiece.canMoveRight() && currPiece.moveRight(),
         ArrowDown: () => currPiece.rotate(),
-        ArrowUp: () => currPiece.canMoveUp() && currPiece.moveUp()
+        ArrowUp: () => currPiece.canMoveUp() && currPiece.moveUp(),
+        KeyI: () => {
+            notifyPause()
+            togglePause()
+        }
     };
 
     actions[listener.code]?.();
@@ -242,10 +247,10 @@ window.onload = async () => {
         }
 
         window.addEventListener('keydown', inGameListener)
-        window.onblur = () => {
-            notifyPause()
-            togglePause()
-        }
+        // window.onblur = () => {
+        //     notifyPause()
+        //     togglePause()
+        // }
 
         continueButton.addEventListener('click', GameMode === "Solo" ? toggleContinue : () => {
             waitingForFriendStatus.style.display = "block"
@@ -266,6 +271,8 @@ window.onload = async () => {
 
     else {
 
+        waitingForFriendStatus.style.display = "block"
+
         await startSignalRConnection()
         joinRoom(gameId as string)
 
@@ -273,7 +280,9 @@ window.onload = async () => {
             setupSignalREventListeners()
             setupPlayingArea()
 
+            waitingForFriendStatus.style.display = "none"
             playingArea.style.display = "block"
+
             startNextRound()
         })
     }
