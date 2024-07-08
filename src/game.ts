@@ -85,11 +85,7 @@ function inGameListener(listener: KeyboardEvent) {
         ArrowLeft: () => currPiece.canMoveLeft() && currPiece.moveLeft(),
         ArrowRight: () => currPiece.canMoveRight() && currPiece.moveRight(),
         ArrowDown: () => currPiece.rotate(),
-        ArrowUp: () => currPiece.canMoveUp() && currPiece.moveUp(),
-        KeyI: () => {
-            notifyPause()
-            togglePause()
-        }
+        ArrowUp: () => currPiece.canMoveUp() && currPiece.moveUp()
     };
 
     actions[listener.code]?.();
@@ -247,10 +243,10 @@ window.onload = async () => {
         }
 
         window.addEventListener('keydown', inGameListener)
-        // window.onblur = () => {
-        //     notifyPause()
-        //     togglePause()
-        // }
+        window.onblur = () => {
+            notifyPause()
+            togglePause()
+        }
 
         continueButton.addEventListener('click', GameMode === "Solo" ? toggleContinue : () => {
             waitingForFriendStatus.style.display = "block"
