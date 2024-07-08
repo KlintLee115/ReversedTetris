@@ -305,6 +305,11 @@ function setupSignalREventListeners() {
         moveFriend(prevCoor, newCoor, color)
     })
 
+    connection.on("LeaveGame", () => {
+        alert('Your friend has left the game. Continue to go to home screen')
+        window.location.href = "/"
+    })
+
     connection.on("ClearRows", (rows: number[]) => clearRows(rows, true))
 
     connection.on("You Won", () => {

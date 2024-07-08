@@ -61,7 +61,7 @@ export function notifyClearRows(rows: number[]) {
 
 export function notifyPause() {
 
-    connection.invoke("Pause")
+    connection.invoke("NotifyPause")
         .catch(err => console.error("Error invoking SendMovement: ", err.toString()));
 }
 
