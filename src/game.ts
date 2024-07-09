@@ -19,13 +19,14 @@ let friendArea: HTMLElement
 
 // Game state
 export let GameMode: GameModeType
-
 export let currPiece: TetrisPiece
 export let landingCoors: [number, number][] = []
 
 let currPieceID: number
 let currInterval: ReturnType<typeof setInterval>;
 let isPaused = false;
+let hasWon = false
+let hasLost = false
 
 export function setLandingCoors(_landingCoors: [number, number][]) {
     landingCoors = _landingCoors
@@ -48,6 +49,8 @@ function getCompletedRows() {
 function togglePause(isThisInitiatizePause = false) {
 
     clearInterval(currInterval)
+
+    if (hasWon || hasLost) return
 
     if (!isPaused) {
         pauseScreen.style.display = "none"
@@ -199,11 +202,11 @@ function startInterval() {
 
             if (currPiece.coor.some(coor => coor[0] > HIGHEST_ALLOWED_DISPLAY_ROW) && currPiece.hitTop()) {
 
+                hasLost = true
+
                 if (GameMode === "Friend") await notifyGameOver()
                 window.removeEventListener('keydown', inGameListener)
                 alert("Game Over")
-
-                if (GameMode === "Solo") window.location.reload()
             }
 
             else startNextRound()
@@ -256,8 +259,11 @@ window.onload = async () => {
 
         window.addEventListener('keydown', inGameListener)
         window.onblur = () => {
-            notifyPause()
-            togglePause(true)
+
+            if (!(hasWon || hasLost)) {
+                notifyPause()
+                togglePause(true)
+            }
         }
 
         continueButton.addEventListener('click', GameMode === "Solo" ? toggleContinue : () => {
@@ -321,8 +327,11 @@ function setupSignalREventListeners() {
     connection.on("ClearRows", (rows: number[]) => clearRows(rows, true))
 
     connection.on("You Won", () => {
+        hasWon = true
         clearInterval(currInterval)
         alert("You Won!")
+        pauseScreen.style.display = "none"
+        mainArea.style.display = "flex"
     })
     connection.on("Pause", togglePause)
     connection.on("Continue", () => {
