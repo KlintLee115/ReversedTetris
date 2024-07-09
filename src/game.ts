@@ -50,15 +50,24 @@ function getCompletedRows() {
     return completeRows
 }
 
-function togglePause() {
-
-    isPaused = true
+function togglePause(isThisInitiatizePause = false) {
 
     clearInterval(currInterval)
 
-    mainArea.style.filter = "blur(10px)";
-    pauseScreen.style.display = "block"
-    waitingForFriendStatus.style.display = "none"
+    if (!isPaused) {
+        pauseScreen.style.display = "none"
+        waitingForFriendStatus.style.display = "block"
+        mainArea.style.display = "none"
+    }
+
+
+    if (isThisInitiatizePause) {
+        pauseScreen.style.display = "block"
+        waitingForFriendStatus.style.display = "none"
+        mainArea.style.filter = "blur(10px)";
+    }
+
+    isPaused = true
 
 }
 
@@ -245,7 +254,7 @@ window.onload = async () => {
         window.addEventListener('keydown', inGameListener)
         window.onblur = () => {
             notifyPause()
-            togglePause()
+            togglePause(true)
         }
 
         continueButton.addEventListener('click', GameMode === "Solo" ? toggleContinue : () => {
@@ -331,6 +340,7 @@ function setupSignalREventListeners() {
                 remainingSeconds--
             }
             else {
+                waitingForFriendCountdown.innerHTML = ""
                 waitingForFriendCountdown.style.display = "none"
                 clearInterval(interval)
                 toggleContinue()
