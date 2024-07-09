@@ -1,16 +1,11 @@
 import { I, J, L, O, S, T, TetrisPiece, Z } from './TetrisPieces.js'
 import { uncolorCoors, colorPlayingArea, resetLandingCoors } from './utility/colors.js';
-import { COLORS } from './utility/consts.js';
+import { COLORS, COLUMNS, DEFAULT_COLOR, HIDDEN_ROWS, ROWS } from './utility/consts.js';
 import { connection, joinRoom, notifyClearRows, notifyGameOver, notifyPause, requestContinue, startSignalRConnection } from './utility/signalR.js';
 
 type GameModeType = "Friend" | "Solo"
 
-export const tetrisPieces = [I, O, J, T, L, S, Z]
-export const DEFAULT_COLOR = "white"
-
-export const ROWS = 22
-export const COLUMNS = 8
-export const HIDDEN_ROWS = 4
+export const TETRIS_PIECES = [I, O, J, T, L, S, Z]
 export const HIGHEST_ALLOWED_DISPLAY_ROW = ROWS - HIDDEN_ROWS - 1
 export let playingArea: HTMLElement
 
@@ -37,7 +32,7 @@ export function setLandingCoors(_landingCoors: [number, number][]) {
 }
 
 // Utility Functions
-const newPiece = (id: number) => new tetrisPieces[Math.floor(Math.random() * tetrisPieces.length)](id)
+const newPiece = (id: number) => new TETRIS_PIECES[Math.floor(Math.random() * TETRIS_PIECES.length)](id)
 
 function getCompletedRows() {
 
@@ -152,6 +147,38 @@ function clearRows(completedRows: number[], isFriendArea = false) {
     });
 }
 
+function startNextRound() {
+
+    currPieceID += 1
+    currPiece = newPiece(currPieceID)
+
+    movePieceIntoPlayingArea()
+
+    startInterval()
+}
+
+function moveFriend(
+    prevCoor: [number, number][],
+    newCoor: [number, number][],
+    color: typeof COLORS[number]) {
+
+
+    prevCoor.forEach(coor => {
+        (friendArea.children.item(coor[0])?.children.item(coor[1]) as HTMLElement).style.backgroundColor = "white"
+    })
+    newCoor.forEach(coor => {
+        (friendArea.children.item(coor[0])?.children.item(coor[1]) as HTMLElement).style.backgroundColor = color
+    })
+}
+
+function shouldMultiGameStart(): Promise<void> {
+    return new Promise((resolve, _) => {
+        connection.on('UpdateGroupCount', (cnt: number) => cnt === 2 && resolve())
+    })
+}
+
+// Game logic
+
 function startInterval() {
 
     resetLandingCoors()
@@ -189,30 +216,6 @@ function startInterval() {
         colorPlayingArea(currPiece, currPiece.color)
 
     }, 500 - (20 * (Math.floor(currPieceID / 5))))
-}
-
-function startNextRound() {
-
-    currPieceID += 1
-    currPiece = newPiece(currPieceID)
-
-    movePieceIntoPlayingArea()
-
-    startInterval()
-}
-
-function moveFriend(
-    prevCoor: [number, number][],
-    newCoor: [number, number][],
-    color: typeof COLORS[number]) {
-
-
-    prevCoor.forEach(coor => {
-        (friendArea.children.item(coor[0])?.children.item(coor[1]) as HTMLElement).style.backgroundColor = "white"
-    })
-    newCoor.forEach(coor => {
-        (friendArea.children.item(coor[0])?.children.item(coor[1]) as HTMLElement).style.backgroundColor = color
-    })
 }
 
 window.onload = async () => {
@@ -293,11 +296,7 @@ window.onload = async () => {
     }
 }
 
-function shouldMultiGameStart(): Promise<void> {
-    return new Promise((resolve, _) => {
-        connection.on('UpdateGroupCount', (cnt: number) => cnt === 2 && resolve())
-    })
-}
+// SignalR
 
 function setupSignalREventListeners() {
 

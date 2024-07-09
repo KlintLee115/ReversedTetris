@@ -1,6 +1,6 @@
-import { DEFAULT_COLOR, GameMode, playingArea, } from "./game";
+import { GameMode, playingArea, } from "./game";
 import { resetLandingCoors } from "./utility/colors";
-import { COLORS } from "./utility/consts";
+import { COLORS, DEFAULT_COLOR } from "./utility/consts";
 import { notifyMovement } from "./utility/signalR";
 
 const COOR = {
