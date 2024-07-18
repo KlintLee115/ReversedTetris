@@ -12,14 +12,12 @@
 </head>
 
 <body>
-  <div style="text-align: center; position: absolute; 
-transform: translate(50%, 50%); right: 50%; bottom: 60%; border: 1px solid blue;
-padding-block: 15px; padding-inline: 30px;">
+  <main>
     <h3>Welcome to Tetris, but Reversed</h3>
-    <h4>To rotate a piece, press &darr;</h4>
-    <h4>To move the piece to the top instantly, press space bar</h4>
-    <h4>To move the piece up, press &uarr;</h4>
-    <h4>And to start the game, press space bar</h4>
+    <p>To rotate a piece, press &darr;</p>
+    <p>To move the piece to the top instantly, press space bar</p>
+    <p>To move the piece up, press &uarr;</p>
+    <p>Select your game mode below</p>
 
     <div style="display: flex; justify-content: space-evenly; margin-top: 50px;">
       <button class="mode-button" id="solo-button">SOLO</button>
@@ -39,8 +37,12 @@ padding-block: 15px; padding-inline: 30px;">
         <button style="border: 1px solid black; display: none;" id="joinGeneratedRoomButton">Join</button>
       </div>
     </section>
-  </div>
+
+  </main>
+  <canvas></canvas>
+
 </body>
 <script type="module" src="/src/main.ts"></script>
+<script type="module" src="/background.ts"></script>
 
 </html>
