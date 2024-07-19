@@ -2,7 +2,6 @@
 <html lang="en">
 
 <head>
-  <link rel="stylesheet" href="./src/style.css">
   <style>
     .mode-button {
       border: 1px solid gray;
@@ -12,8 +11,8 @@
 </head>
 
 <body>
-  <main>
-    <h3>Welcome to Tetris, but Reversed</h3>
+  <main id="home">
+    <h2>Welcome to Tetris, but Reversed</h2>
     <p>To rotate a piece, press &darr;</p>
     <p>To move the piece to the top instantly, press space bar</p>
     <p>To move the piece up, press &uarr;</p>
@@ -39,10 +38,10 @@
     </section>
 
   </main>
-  <canvas></canvas>
 
 </body>
 <script type="module" src="/src/main.ts"></script>
 <script type="module" src="/background.ts"></script>
+<link rel="stylesheet" href="./src/style.css">
 
 </html>

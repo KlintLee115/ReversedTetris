@@ -1,7 +1,6 @@
 import { I, J, L, O, S, T, TetrisPiece, Z } from './TetrisPieces.js'
 import { uncolorCoors, colorPlayingArea, resetLandingCoors } from './utility/colors.js';
 import { COLORS, COLUMNS, DEFAULT_COLOR, HIDDEN_ROWS, ROWS } from './utility/consts.js';
-import { connection, joinRoom, notifyClearRows, notifyGameOver, notifyPause, requestContinue, startSignalRConnection } from './utility/signalR.js';
 
 type GameModeType = "Friend" | "Solo"
 
@@ -175,7 +174,9 @@ function moveFriend(
 }
 
 function shouldMultiGameStart(): Promise<void> {
-    return new Promise((resolve, _) => {
+    return new Promise(async (resolve, _) => {
+        const { connection } = await import("./utility/signalR.js")
+
         connection.on('UpdateGroupCount', (cnt: number) => cnt === 2 && resolve())
     })
 }
@@ -194,6 +195,8 @@ function startInterval() {
 
             const completedRows = getCompletedRows()
 
+            const { notifyClearRows } = await import("./utility/signalR.js")
+
             if (GameMode === "Friend") notifyClearRows(completedRows)
 
             clearRows(completedRows)
@@ -203,6 +206,8 @@ function startInterval() {
             if (currPiece.coor.some(coor => coor[0] > HIGHEST_ALLOWED_DISPLAY_ROW) && currPiece.hitTop()) {
 
                 hasLost = true
+
+                const { notifyGameOver } = await import("./utility/signalR.js")
 
                 if (GameMode === "Friend") await notifyGameOver()
                 window.removeEventListener('keydown', inGameListener)
@@ -258,18 +263,24 @@ window.onload = async () => {
         }
 
         window.addEventListener('keydown', inGameListener)
-        window.onblur = () => {
+        window.onblur = async () => {
 
             if (!(hasWon || hasLost)) {
+
+                const { notifyPause } = await import("./utility/signalR.js")
+
                 notifyPause()
                 togglePause(true)
             }
         }
 
-        continueButton.addEventListener('click', GameMode === "Solo" ? toggleContinue : () => {
+        continueButton.addEventListener('click', GameMode === "Solo" ? toggleContinue : async () => {
             waitingForFriendStatus.style.display = "block"
             pauseScreen.style.display = "none"
             mainArea.style.display = "none"
+
+            const { requestContinue } = await import("./utility/signalR.js")
+
             requestContinue()
         })
     }
@@ -286,6 +297,8 @@ window.onload = async () => {
     else {
 
         waitingForFriendStatus.style.display = "block"
+
+        const { startSignalRConnection, joinRoom } = await import("./utility/signalR.js")
 
         await startSignalRConnection()
         joinRoom(gameId as string)
@@ -304,13 +317,15 @@ window.onload = async () => {
 
 // SignalR
 
-function setupSignalREventListeners() {
+async function setupSignalREventListeners() {
 
     type MovementType = {
         prevCoor: [number, number][],
         newCoor: [number, number][],
         color: typeof COLORS[number],
     }
+
+    const { connection } = await import("./utility/signalR.js")
 
     connection.on("ReceiveMovement", (data: MovementType) => {
 

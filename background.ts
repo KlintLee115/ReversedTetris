@@ -42,7 +42,7 @@ function Tetris(x = 0, y = 0, width = window.innerWidth, height = window.innerHe
         x: 0,
         y: 0,
     };
-    this.init();
+    this.init()
 }
 
 
@@ -53,14 +53,13 @@ Tetris.prototype.init = function () {
     this.unitSize = 20
 
     // init the board
-    this.board = [];
-    this.boardWidth = Math.floor(this.width / this.unitSize);
-    this.boardHeight = Math.floor(this.height / this.unitSize);
+    this.board = []
+    this.boardWidth = Math.floor(this.width / this.unitSize)
+    this.boardHeight = Math.floor(this.height / this.unitSize)
 
     const board = this.board
     const boardWidth = this.boardWidth
     const boardHeight = this.boardHeight
-    const halfHeight = boardHeight / 2
 
     // init board
     for (let x = 0; x <= boardWidth; x++) {
@@ -72,21 +71,22 @@ Tetris.prototype.init = function () {
                 colors: ['rgb(0,0,0)', 'rgb(0,0,0)', 'rgb(0,0,0)']
             };
 
-            if (Math.random() > 0.15 && y > halfHeight) {
+            if (Math.random() > 0.15) {
+
                 board[x][y] = {
                     data: 1,
                     colors: tetrominos[Math.floor(Math.random() * tetrominos.length)].colors
-                };
+                }
             }
         }
     }
 
     // collapse the board a bit
     for (let x = 0; x <= boardWidth; x++) {
-        for (let y = boardHeight - 1; y > -1; y--) {
+        for (let y = boardHeight; y >= 0; y--) {
 
-            if (board[x][y].data === 0 && y > 0) {
-                for (var yy = y; yy > 0; yy--) {
+            if (board[x][y].data === 0) {
+                for (let yy = y; yy > 0; yy--) {
                     if (board[x][yy - 1].data) {
 
                         board[x][yy].data = 1;
@@ -100,6 +100,7 @@ Tetris.prototype.init = function () {
         }
     }
 
+
     // render the board
     this.checkLines();
     this.renderBoard();
@@ -110,8 +111,8 @@ Tetris.prototype.init = function () {
 };
 
 Tetris.prototype.update = function () {
-    if (!this.checkMovement(this.curPiece, 0, 1)) {
-        if (this.curPiece.y < -1) return true;
+    if (!this.checkCanMoveUp(this.curPiece)) {
+        if (this.curPiece.y === 0) return
         this.fillBoard(this.curPiece);
         this.newTetromino();
     } else {
@@ -127,12 +128,11 @@ Tetris.prototype.update = function () {
 
 Tetris.prototype.renderBoard = function () {
     const { bgCtx, unitSize, board, boardWidth, boardHeight } = this;
-    bgCtx.clearRect(0, 0, this.width, this.height);
     for (let x = 0; x < boardWidth; x++) {
-        for (let y = 0; y < boardHeight; y++) {
+        for (let y = 0; y <= boardHeight; y++) {
             if (board[x][y].data !== 0) {
                 const bX = x * unitSize;
-                const bY = y * unitSize;
+                const bY = window.innerHeight - (y * unitSize);
                 bgCtx.fillStyle = board[x][y].colors[0];
                 bgCtx.fillRect(bX, bY, unitSize, unitSize);
                 bgCtx.fillStyle = board[x][y].colors[1];
@@ -152,7 +152,7 @@ Tetris.prototype.render = function () {
         for (let y = 0; y < 4; y++) {
             if (curPiece.data[x][y] === 1) {
                 const xPos = (curPiece.x + x) * unitSize;
-                const yPos = (curPiece.y + y) * unitSize;
+                const yPos = window.innerHeight - ((curPiece.y + y) * unitSize)
                 if (yPos > -1) {
                     fgCtx.fillStyle = curPiece.colors[0];
                     fgCtx.fillRect(xPos, yPos, unitSize, unitSize);
@@ -166,31 +166,28 @@ Tetris.prototype.render = function () {
     }
 }
 
-// Make sure we can mov where we want.
-Tetris.prototype.checkMovement = function (curPiece: curPieceI, newX: number, newY: number) {
+// Make sure we can move.
+Tetris.prototype.checkCanMoveUp = function (curPiece: curPieceI) {
     const piece = curPiece.data
     const posX = curPiece.x
     const posY = curPiece.y
     const board = this.board
-    const boardHeight = this.boardHeight
 
     for (var x = 0; x < 4; x++) {
         for (var y = 0; y < 4; y++) {
             if (piece![x][y] === 1) {
 
-                if (!board[posX + x + newX]) {
-                    board[posX + x + newX] = []
+                if (!board[posX + x]) {
+                    board[posX + x] = []
                 }
 
-                if (!board[posX + x + newX][y + posY + newY]) {
-                    board[posX + x + newX][y + posY + newY] = {
+                if (!board[posX + x][y + posY + 1]) {
+                    board[posX + x][y + posY + 1] = {
                         data: 0
                     }
                 }
 
-                if (board[posX + x + newX][y + posY + newY].data == 1) return false
-
-                if (posY + y + newY > boardHeight) return false
+                if (board[posX + x][y + posY + 1].data == 1) return false
             }
         }
     }
@@ -239,8 +236,8 @@ Tetris.prototype.fillBoard = function (curPiece: curPieceI) {
         }
     }
 
-    this.checkLines();
-    this.renderBoard();
+    this.checkLines()
+    this.renderBoard()
 };
 
 // Tetris class with optimized newTetromino method
@@ -251,7 +248,7 @@ Tetris.prototype.newTetromino = function () {
     curPiece.data = data;
     curPiece.colors = colors;
     curPiece.x = Math.floor(Math.random() * (this.boardWidth - data.length + 1));
-    curPiece.y = -4;
+    curPiece.y = 0;
 };
 
 // Initialize multiple Tetris instances

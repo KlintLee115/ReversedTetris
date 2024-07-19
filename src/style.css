@@ -20,7 +20,7 @@ body {
   overflow: hidden;
 }
 
-main {
+main#home {
   border-radius: 5%;
   box-shadow: 0px 0px 39px 60px rgba(0, 0, 0, 0.38);
   text-align: center;
