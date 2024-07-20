@@ -1,6 +1,6 @@
 import { I, J, L, O, S, T, TetrisPiece, Z } from './TetrisPieces.js'
 import { uncolorCoors, colorPlayingArea, resetLandingCoors } from './utility/colors.js';
-import { COLORS, COLUMNS, DEFAULT_COLOR, HIDDEN_ROWS, ROWS } from './utility/consts.js';
+import { BORDER_DEFAULT_COLOR, COLORS, COLUMNS, DEFAULT_COLOR, HIDDEN_ROWS, ROWS } from './utility/consts.js';
 
 type GameModeType = "Friend" | "Solo"
 
@@ -155,6 +155,7 @@ function startNextRound() {
     currPiece = newPiece(currPieceID)
 
     movePieceIntoPlayingArea()
+    resetLandingCoors()
 
     startInterval()
 }
@@ -184,8 +185,6 @@ function shouldMultiGameStart(): Promise<void> {
 // Game logic
 
 function startInterval() {
-
-    resetLandingCoors()
 
     currInterval = setInterval(async () => {
 
@@ -238,6 +237,8 @@ window.onload = async () => {
         for (let i = 0; i < (GameMode === "Friend" ? 2 : 1); i++) {
 
             const panel = document.createElement('div')
+            panel.style.border = "5px solid white"
+            panel.style.padding = "4px"
 
             if (i === 0) playingArea = panel
             else friendArea = panel
@@ -250,10 +251,11 @@ window.onload = async () => {
 
                 for (let col = 0; col < COLUMNS; col++) {
                     const newBox = document.createElement('div');
-                    newBox.style.cssText = `
-                width: 2rem; height: 2rem; border: 1px solid black;
-                background-color: white;
-            `
+                    newBox.style.cssText = 'width: 2rem; height: 2rem;'
+                    newBox.style.backgroundColor = DEFAULT_COLOR
+
+                    newBox.style.border = "2px solid"
+                    newBox.style.borderColor = BORDER_DEFAULT_COLOR
                     rowOfBoxes.appendChild(newBox);
                 }
                 panel.appendChild(rowOfBoxes);

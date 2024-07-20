@@ -66,8 +66,6 @@ export abstract class TetrisPiece {
 
     hitTop() {
 
-        resetLandingCoors()
-
         return this.coor.some(([row, col]) => {
             const rowAbove = playingArea.children.item(row - 1) as HTMLElement;
             const boxAbove = rowAbove?.children.item(col) as HTMLElement;
@@ -91,7 +89,7 @@ export abstract class TetrisPiece {
         if (GameMode === "Friend") notifyMovement(oldCoor, this.coor, this.color)
 
         // reset landing coors only if action is not move up
-        if (!(rowOrCol == 0 && magnitude == -1)) resetLandingCoors()
+        if (!(rowOrCol === 0 && magnitude === -1)) resetLandingCoors()
     }
 
     moveRight = () => this.shiftCoor(1, 1)
