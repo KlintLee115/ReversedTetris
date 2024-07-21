@@ -1,3 +1,4 @@
+import { darken, lighten } from "polished";
 import { landingCoors, getLandingCoors, currPiece, setLandingCoors, playingArea } from "../game";
 import { TetrisPiece } from "../TetrisPieces";
 import { BORDER_DEFAULT_COLOR, DEFAULT_COLOR } from "./consts";
@@ -6,7 +7,16 @@ export function colorBlock(row: number, col: number, color: string) {
 
     const box = playingArea.children!.item(row)!.children.item(col) as HTMLElement;
     box.style.backgroundColor = color;
-    box.style.borderColor = BORDER_DEFAULT_COLOR
+
+    box.style.borderColor = color === DEFAULT_COLOR ? BORDER_DEFAULT_COLOR : lighten(0.25, color)
+}
+
+export function settleCurrPiece() {
+    landingCoors.forEach(coor => {
+        const box = playingArea.children.item(coor[0])!.children.item(coor[1]) as HTMLElement;
+        box.style.borderColor = darken(0.2, box.style.borderColor)
+    }
+    )
 }
 
 export function colorPlayingArea(pieceForCoor: TetrisPiece, color: string) {
@@ -28,16 +38,14 @@ export function removeLandingCoors() {
     )
 }
 
-export function resetLandingCoors() {
-
-    removeLandingCoors()
+export function makeLandingCoors() {
 
     setLandingCoors(getLandingCoors(currPiece.getId(), currPiece.coor))
     const color = currPiece.color
 
     landingCoors.forEach(coor => {
         const box = playingArea.children.item(coor[0])!.children.item(coor[1]) as HTMLElement
-        box.style.borderColor = color
+        box.style.borderColor = lighten(0.2, color)
     })
 }
 

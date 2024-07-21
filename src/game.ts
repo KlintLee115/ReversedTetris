@@ -1,5 +1,5 @@
 import { I, J, L, O, S, T, TetrisPiece, Z } from './TetrisPieces.js'
-import { uncolorCoors, colorPlayingArea, resetLandingCoors } from './utility/colors.js';
+import { uncolorCoors, colorPlayingArea, makeLandingCoors, colorBlock, settleCurrPiece } from './utility/colors.js';
 import { BORDER_DEFAULT_COLOR, COLORS, COLUMNS, DEFAULT_COLOR, HIDDEN_ROWS, ROWS } from './utility/consts.js';
 
 type GameModeType = "Friend" | "Solo"
@@ -142,6 +142,8 @@ function clearRows(completedRows: number[], isFriendArea = false) {
             for (let colNum = 0; colNum < COLUMNS; colNum++) {
                 const currBox = currRow.children[colNum] as HTMLElement;
                 const targetBox = targetRow.children[colNum] as HTMLElement;
+                targetBox.style.borderColor = currBox.style.borderColor;
+                currBox.style.borderColor = BORDER_DEFAULT_COLOR
                 targetBox.style.backgroundColor = currBox.style.backgroundColor;
                 currBox.style.backgroundColor = DEFAULT_COLOR;
             }
@@ -150,12 +152,13 @@ function clearRows(completedRows: number[], isFriendArea = false) {
 }
 
 function startNextRound() {
+    settleCurrPiece()
 
     currPieceID += 1
     currPiece = newPiece(currPieceID)
 
     movePieceIntoPlayingArea()
-    resetLandingCoors()
+    makeLandingCoors()
 
     startInterval()
 }
@@ -251,9 +254,9 @@ window.onload = async () => {
 
                 for (let col = 0; col < COLUMNS; col++) {
                     const newBox = document.createElement('div');
-                    newBox.style.cssText = 'width: 2rem; height: 2rem;'
+                    newBox.style.width = "2rem"
+                    newBox.style.height = "2rem"
                     newBox.style.backgroundColor = DEFAULT_COLOR
-
                     newBox.style.border = "2px solid"
                     newBox.style.borderColor = BORDER_DEFAULT_COLOR
                     rowOfBoxes.appendChild(newBox);

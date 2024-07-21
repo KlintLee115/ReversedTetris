@@ -1,5 +1,5 @@
 import { GameMode, playingArea, } from "./game";
-import { resetLandingCoors } from "./utility/colors";
+import { makeLandingCoors, removeLandingCoors } from "./utility/colors";
 import { COLORS, DEFAULT_COLOR } from "./utility/consts";
 import { notifyMovement } from "./utility/signalR";
 
@@ -60,7 +60,8 @@ export abstract class TetrisPiece {
 
             if (GameMode === "Friend") notifyMovement(oldCoor, this.coor, this.color)
 
-            resetLandingCoors();
+            removeLandingCoors()
+            makeLandingCoors()
         }
     }
 
@@ -89,7 +90,10 @@ export abstract class TetrisPiece {
         if (GameMode === "Friend") notifyMovement(oldCoor, this.coor, this.color)
 
         // reset landing coors only if action is not move up
-        if (!(rowOrCol === 0 && magnitude === -1)) resetLandingCoors()
+        if (!(rowOrCol === 0 && magnitude === -1)) {
+            removeLandingCoors()
+            makeLandingCoors()
+        }
     }
 
     moveRight = () => this.shiftCoor(1, 1)
