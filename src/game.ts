@@ -115,6 +115,7 @@ function movePieceIntoPlayingArea() {
     while (currPiece.coor.every(coor => coor[0] > HIGHEST_ALLOWED_DISPLAY_ROW)) {
         currPiece.moveUp()
     }
+    makeLandingCoors()
 }
 
 // check for completed rows, clear them and move up
@@ -142,7 +143,7 @@ function clearRows(completedRows: number[], isFriendArea = false) {
             for (let colNum = 0; colNum < COLUMNS; colNum++) {
                 const currBox = currRow.children[colNum] as HTMLElement;
                 const targetBox = targetRow.children[colNum] as HTMLElement;
-                targetBox.style.borderColor = currBox.style.borderColor;
+                targetBox.style.borderColor = currBox.style.borderColor
                 currBox.style.borderColor = BORDER_DEFAULT_COLOR
                 targetBox.style.backgroundColor = currBox.style.backgroundColor;
                 currBox.style.backgroundColor = DEFAULT_COLOR;
@@ -152,13 +153,11 @@ function clearRows(completedRows: number[], isFriendArea = false) {
 }
 
 function startNextRound() {
-    settleCurrPiece()
 
     currPieceID += 1
     currPiece = newPiece(currPieceID)
 
     movePieceIntoPlayingArea()
-    makeLandingCoors()
 
     startInterval()
 }
@@ -200,6 +199,8 @@ function startInterval() {
             const { notifyClearRows } = await import("./utility/signalR.js")
 
             if (GameMode === "Friend") notifyClearRows(completedRows)
+
+            settleCurrPiece()
 
             clearRows(completedRows)
 
