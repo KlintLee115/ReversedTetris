@@ -1,5 +1,5 @@
 import { I, J, L, O, S, T, TetrisPiece, Z } from './TetrisPieces.js'
-import { uncolorCoors, colorPlayingArea, makeLandingCoors, colorBlock, settleCurrPiece } from './utility/colors.js';
+import { uncolorCoors, colorPlayingArea, makeLandingCoors, settleCurrPiece } from './utility/colors.js';
 import { BORDER_DEFAULT_COLOR, COLORS, COLUMNS, DEFAULT_COLOR, HIDDEN_ROWS, ROWS } from './utility/consts.js';
 
 type GameModeType = "Friend" | "Solo"
