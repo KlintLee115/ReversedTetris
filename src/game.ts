@@ -169,7 +169,7 @@ function moveFriend(
 
 
     prevCoor.forEach(coor => {
-        (friendArea.children.item(coor[0])?.children.item(coor[1]) as HTMLElement).style.backgroundColor = "white"
+        (friendArea.children.item(coor[0])?.children.item(coor[1]) as HTMLElement).style.backgroundColor = DEFAULT_COLOR
     })
     newCoor.forEach(coor => {
         (friendArea.children.item(coor[0])?.children.item(coor[1]) as HTMLElement).style.backgroundColor = color
