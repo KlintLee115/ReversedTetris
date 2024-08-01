@@ -6,7 +6,7 @@ import { BORDER_DEFAULT_COLOR, DEFAULT_COLOR } from "./consts";
 export function colorBlock(row: number, col: number, color: string) {
 
     const box = playingArea.children!.item(row)!.children.item(col) as HTMLElement;
-    box.style.backgroundColor = color;
+    box.style.backgroundColor = color === DEFAULT_COLOR ? DEFAULT_COLOR : darken(0.05, color)
 
     box.style.borderColor = color === DEFAULT_COLOR ? BORDER_DEFAULT_COLOR : lighten(0.1, color)
 }
@@ -14,7 +14,7 @@ export function colorBlock(row: number, col: number, color: string) {
 export function settleCurrPiece() {
     landingCoors.forEach(coor => {
         const box = playingArea.children.item(coor[0])!.children.item(coor[1]) as HTMLElement;
-        box.style.borderColor = darken(0.15, box.style.borderColor)
+        box.style.borderColor = darken(0.1, box.style.borderColor)
     }
     )
 }

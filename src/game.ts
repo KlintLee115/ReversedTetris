@@ -241,7 +241,7 @@ window.onload = async () => {
         for (let i = 0; i < (GameMode === "Friend" ? 2 : 1); i++) {
 
             const panel = document.createElement('div')
-            panel.style.border = "5px solid white"
+            panel.style.border = "3px solid white"
             panel.style.padding = "4px"
 
             if (i === 0) playingArea = panel
@@ -258,7 +258,7 @@ window.onload = async () => {
                     newBox.style.width = "2rem"
                     newBox.style.height = "2rem"
                     newBox.style.backgroundColor = DEFAULT_COLOR
-                    newBox.style.border = "2px solid"
+                    newBox.style.border = "1px solid"
                     newBox.style.borderColor = BORDER_DEFAULT_COLOR
                     rowOfBoxes.appendChild(newBox);
                 }
