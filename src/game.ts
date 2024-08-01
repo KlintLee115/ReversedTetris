@@ -271,6 +271,11 @@ window.onload = async () => {
         window.addEventListener('keydown', inGameListener)
         window.onblur = async () => {
 
+            if (GameMode === "Solo") {
+                togglePause(true)
+                return
+            }
+
             if (!(hasWon || hasLost)) {
 
                 const { notifyPause } = await import("./utility/signalR.js")

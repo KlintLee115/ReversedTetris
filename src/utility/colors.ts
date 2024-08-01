@@ -8,13 +8,13 @@ export function colorBlock(row: number, col: number, color: string) {
     const box = playingArea.children!.item(row)!.children.item(col) as HTMLElement;
     box.style.backgroundColor = color;
 
-    box.style.borderColor = color === DEFAULT_COLOR ? BORDER_DEFAULT_COLOR : lighten(0.25, color)
+    box.style.borderColor = color === DEFAULT_COLOR ? BORDER_DEFAULT_COLOR : lighten(0.1, color)
 }
 
 export function settleCurrPiece() {
     landingCoors.forEach(coor => {
         const box = playingArea.children.item(coor[0])!.children.item(coor[1]) as HTMLElement;
-        box.style.borderColor = darken(0.2, box.style.borderColor)
+        box.style.borderColor = darken(0.15, box.style.borderColor)
     }
     )
 }
@@ -45,7 +45,7 @@ export function makeLandingCoors() {
 
     landingCoors.forEach(coor => {
         const box = playingArea.children.item(coor[0])!.children.item(coor[1]) as HTMLElement
-        box.style.borderColor = lighten(0.2, color)
+        box.style.borderColor = lighten(0.1, color)
     })
 }
 
