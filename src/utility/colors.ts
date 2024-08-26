@@ -14,7 +14,7 @@ export function colorBlock(row: number, col: number, color: string) {
 export function settleCurrPiece() {
     landingCoors.forEach(coor => {
         const box = playingArea.children.item(coor[0])!.children.item(coor[1]) as HTMLElement;
-        box.style.borderColor = darken(0.1, box.style.borderColor)
+        // box.style.borderColor = darken(0.1, box.style.borderColor)
     }
     )
 }

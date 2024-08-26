@@ -259,6 +259,8 @@ window.onload = async () => {
                     newBox.style.height = "2rem"
                     newBox.style.backgroundColor = DEFAULT_COLOR
                     newBox.style.border = "1px solid"
+                    newBox.style.borderRadius = "1px"
+                    newBox.style.margin = "1px"
                     newBox.style.borderColor = BORDER_DEFAULT_COLOR
                     rowOfBoxes.appendChild(newBox);
                 }
