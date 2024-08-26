@@ -45,7 +45,7 @@ export function makeLandingCoors() {
 
     landingCoors.forEach(coor => {
         const box = playingArea.children.item(coor[0])!.children.item(coor[1]) as HTMLElement
-        box.style.borderColor = lighten(0.1, color)
+        box.style.borderColor = lighten(0.25, color)
     })
 }
 

@@ -1,4 +1,4 @@
-export const COLORS = ["purple", "green", "red", "rgb(59, 131, 247)", "rgb(247, 244, 59)"]
+export const COLORS = ["purple", "green", "red", "rgb(59, 131, 247)", "rgb(209, 206, 42)"]
 
 export const DEFAULT_COLOR = "rgb(15, 15, 15)"
 export const BORDER_DEFAULT_COLOR = "rgb(30, 30, 30)"
