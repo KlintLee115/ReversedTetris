@@ -11,14 +11,6 @@ export function colorBlock(row: number, col: number, color: string) {
     box.style.borderColor = color === DEFAULT_COLOR ? BORDER_DEFAULT_COLOR : lighten(0.1, color)
 }
 
-export function settleCurrPiece() {
-    landingCoors.forEach(coor => {
-        const box = playingArea.children.item(coor[0])!.children.item(coor[1]) as HTMLElement;
-        // box.style.borderColor = darken(0.1, box.style.borderColor)
-    }
-    )
-}
-
 export function colorPlayingArea(pieceForCoor: TetrisPiece, color: string) {
     pieceForCoor.coor.forEach(element => {
 
