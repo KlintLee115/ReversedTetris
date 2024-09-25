@@ -1,9 +1,10 @@
 import { darken, lighten } from "polished";
-import { landingCoors, getLandingCoors, currPiece, setLandingCoors, playingArea } from "../game";
 import { TetrisPiece } from "../TetrisPieces";
 import { BORDER_DEFAULT_COLOR, DEFAULT_COLOR } from "./consts";
+import { Game } from "../game";
+import { BackgroundGame } from "../../backgroundGame";
 
-export function colorBlock(row: number, col: number, color: string) {
+export function colorBlock(row: number, col: number, color: string, playingArea: HTMLElement) {
 
     const box = playingArea.children!.item(row)!.children.item(col) as HTMLElement;
     box.style.backgroundColor = color === DEFAULT_COLOR ? DEFAULT_COLOR : darken(0.05, color)
@@ -11,36 +12,36 @@ export function colorBlock(row: number, col: number, color: string) {
     box.style.borderColor = color === DEFAULT_COLOR ? BORDER_DEFAULT_COLOR : lighten(0.1, color)
 }
 
-export function colorPlayingArea(pieceForCoor: TetrisPiece, color: string) {
+export function colorPlayingArea(pieceForCoor: TetrisPiece, color: string, playingArea: HTMLElement) {
     pieceForCoor.coor.forEach(element => {
 
         let rowCoor = element[0]
         let colCoor = element[1]
 
-        colorBlock(rowCoor, colCoor, color);
+        colorBlock(rowCoor, colCoor, color, playingArea);
         (playingArea.children[rowCoor].children[colCoor] as HTMLElement).id = pieceForCoor.getId().toString()
     })
 }
 
-export function removeLandingCoors() {
-    landingCoors.forEach(coor => {
-        const box = playingArea.children.item(coor[0])!.children.item(coor[1]) as HTMLElement;
+export function removeLandingCoors(game: Game | BackgroundGame) {
+    game.landingCoors.forEach(coor => {
+        const box = game.playingArea.children.item(coor[0])!.children.item(coor[1]) as HTMLElement;
         box.style.borderColor = BORDER_DEFAULT_COLOR
     }
     )
 }
 
-export function makeLandingCoors() {
+export function makeLandingCoors(game: Game | BackgroundGame) {
 
-    setLandingCoors(getLandingCoors(currPiece.getId(), currPiece.coor))
-    const color = currPiece.color
+    game.setLandingCoors(game.getLandingCoors(game.currPiece.getId(), game.currPiece.coor))
+    const color = game.currPiece.color
 
-    landingCoors.forEach(coor => {
-        const box = playingArea.children.item(coor[0])!.children.item(coor[1]) as HTMLElement
+    game.landingCoors.forEach(coor => {
+        const box = game.playingArea.children.item(coor[0])!.children.item(coor[1]) as HTMLElement
         box.style.borderColor = lighten(0.25, color)
     })
 }
 
-export function uncolorCoors(coors: [number, number][]) {
-    coors.forEach(coor => colorBlock(coor[0], coor[1], DEFAULT_COLOR))
+export function uncolorCoors(coors: [number, number][], playingArea: HTMLElement) {
+    coors.forEach(coor => colorBlock(coor[0], coor[1], DEFAULT_COLOR, playingArea))
 }

@@ -1,6 +1,7 @@
-import { GameMode, playingArea, } from "./game";
+import { BackgroundGame } from "../backgroundGame";
+import { Game, GameModeType } from "./game";
 import { makeLandingCoors, removeLandingCoors } from "./utility/colors";
-import { COLORS, DEFAULT_COLOR } from "./utility/consts";
+import { BACKGROUND_HIDDEN_ROWS, BACKGROUND_ROWS_DISPLAYABLE, COLORS, DEFAULT_COLOR } from "./utility/consts";
 import { notifyMovement } from "./utility/signalR";
 
 const COOR = {
@@ -12,6 +13,9 @@ export abstract class TetrisPiece {
 
     private id: number;
     private static CURR_COLOR_IDX = 0;
+    private playingArea: HTMLElement
+    private GameMode: GameModeType
+    private Game: Game | BackgroundGame
 
     protected centerCoor: [number, number];
     protected orientationIDX: number;
@@ -19,12 +23,18 @@ export abstract class TetrisPiece {
     public color: string;
     public coor: [number, number][];
 
-    constructor(newId: number) {
+    constructor(game: Game | BackgroundGame, newId: number, playingArea: HTMLElement, GameMode: GameModeType) {
+
+        this.Game = game
         this.color = COLORS[TetrisPiece.CURR_COLOR_IDX];
         this.id = newId;
-        this.centerCoor = [21, Math.floor(Math.random() * 7)];
+        this.playingArea = playingArea
+        this.GameMode = GameMode
+
+        this.centerCoor = [BACKGROUND_ROWS_DISPLAYABLE + BACKGROUND_HIDDEN_ROWS - 1, Math.floor(Math.random() * 7)];
         this.orientationIDX = Math.floor(Math.random() * this.getOrientations().length);
-        this.coor = this.getOrientations()[this.orientationIDX];
+        this.coor = this.getOrientations()[this.orientationIDX]
+        
         this.adjustPiecePositionToBoundary();
 
         if (TetrisPiece.CURR_COLOR_IDX === COLORS.length - 1) TetrisPiece.CURR_COLOR_IDX = 0
@@ -39,7 +49,7 @@ export abstract class TetrisPiece {
 
     private canMove(newCoor: [number, number][]): boolean {
         return newCoor.every(([row, col]) => {
-            const rowElement = playingArea.children.item(row) as HTMLElement
+            const rowElement = this.playingArea.children.item(row) as HTMLElement
             const colElement = rowElement?.children.item(col) as HTMLElement
             return colElement && (colElement.style.backgroundColor === DEFAULT_COLOR || parseInt(colElement.id) === this.id)
         });
@@ -58,17 +68,17 @@ export abstract class TetrisPiece {
             this.orientationIDX = newOrientationIdx;
             this.coor = newCoor;
 
-            if (GameMode === "Friend") notifyMovement(oldCoor, this.coor, this.color)
+            if (this.GameMode === "Friend") notifyMovement(oldCoor, this.coor, this.color)
 
-            removeLandingCoors()
-            makeLandingCoors()
+            removeLandingCoors(this.Game)
+            makeLandingCoors(this.Game)
         }
     }
 
     hitTop() {
 
         return this.coor.some(([row, col]) => {
-            const rowAbove = playingArea.children.item(row - 1) as HTMLElement;
+            const rowAbove = this.playingArea.children.item(row - 1) as HTMLElement;
             const boxAbove = rowAbove?.children.item(col) as HTMLElement;
             return row === 0 || (boxAbove && ![DEFAULT_COLOR].includes(boxAbove.style.backgroundColor) && parseInt(boxAbove.id) !== this.id);
         });
@@ -87,12 +97,12 @@ export abstract class TetrisPiece {
         this.centerCoor[rowOrCol === COOR.Row ? COOR.Row : COOR.Col] += magnitude;
         this.coor = this.getOrientations()[this.orientationIDX];
 
-        if (GameMode === "Friend") notifyMovement(oldCoor, this.coor, this.color)
+        if (this.GameMode === "Friend") notifyMovement(oldCoor, this.coor, this.color)
 
         // reset landing coors only if action is not move up
         if (!(rowOrCol === 0 && magnitude === -1)) {
-            removeLandingCoors()
-            makeLandingCoors()
+            removeLandingCoors(this.Game)
+            makeLandingCoors(this.Game)
         }
     }
 
@@ -113,7 +123,6 @@ export abstract class TetrisPiece {
             if (elementCoor[1] > 7) this.centerCoor[1] -= elementCoor[1] - 7;
 
             if (elementCoor[1] < 0) this.centerCoor[1] -= elementCoor[1];
-            if (elementCoor[0] > 21) this.centerCoor[0] -= elementCoor[0] - 21;
         });
         this.coor = this.getOrientations()[this.orientationIDX];
     }

@@ -1,258 +1,107 @@
 import { I, J, L, O, S, T, TetrisPiece, Z } from './TetrisPieces.js'
-import { uncolorCoors, colorPlayingArea, makeLandingCoors } from './utility/colors.js';
-import { BORDER_DEFAULT_COLOR, COLORS, COLUMNS, DEFAULT_COLOR, HIDDEN_ROWS, ROWS } from './utility/consts.js';
+import { uncolorCoors, colorPlayingArea, makeLandingCoors } from './utility/colors.js'
+import { BORDER_DEFAULT_COLOR, COLORS, COLUMNS, DEFAULT_COLOR, HIDDEN_ROWS, ROWS } from './utility/consts.js'
 
-type GameModeType = "Friend" | "Solo"
+export type GameModeType = "Friend" | "Solo"
 
 export const TETRIS_PIECES = [I, O, J, T, L, S, Z]
 export const HIGHEST_ALLOWED_DISPLAY_ROW = ROWS - HIDDEN_ROWS - 1
-export let playingArea: HTMLElement
 
-const mainArea = document.getElementsByTagName('main').item(0)!
-const pauseScreen = document.getElementById('pauseScreen')!
-const continueButton = document.getElementById('continueButton')!
-const waitingForFriendStatus = document.getElementById('waiting-for-friend-status')!
-const waitingForFriendCountdown = document.getElementById('waiting-for-friend-countdown')!
+export class Game {
+    private friendArea: HTMLElement | null = null
+    public playingArea: HTMLElement
+    public currPiece: TetrisPiece
+    private currPieceID: number
+    private currInterval: ReturnType<typeof setInterval>
+    private isPaused = false
+    private hasWon = false
+    public hasLost = false
 
-let friendArea: HTMLElement
+    private GameMode: GameModeType
+    public landingCoors: [number, number][] = []
+    private mainArea: HTMLElement
+    private pauseScreen: HTMLElement
+    private continueButton: HTMLElement
+    private waitingForFriendStatus: HTMLElement
+    private waitingForFriendCountdown: HTMLElement
 
-// Game state
-export let GameMode: GameModeType
-export let currPiece: TetrisPiece
-export let landingCoors: [number, number][] = []
+    constructor(mainArea: HTMLElement, pauseScreen: HTMLElement, continueButton: HTMLElement, waitingForFriendStatus: HTMLElement, waitingForFriendCountdown: HTMLElement) {
+        this.mainArea = mainArea
+        this.pauseScreen = pauseScreen
+        this.continueButton = continueButton
+        this.waitingForFriendStatus = waitingForFriendStatus
+        this.waitingForFriendCountdown = waitingForFriendCountdown
+        this.playingArea = document.createElement('div')
+        this.currPieceID = 0
 
-let currPieceID: number
-let currInterval: ReturnType<typeof setInterval>;
-let isPaused = false;
-let hasWon = false
-let hasLost = false
+        const urlParams = new URLSearchParams(window.location.search)
+        const gameId = urlParams.get('id')
 
-export function setLandingCoors(_landingCoors: [number, number][]) {
-    landingCoors = _landingCoors
-}
+        this.GameMode = gameId === null ? "Solo" : "Friend"
 
-// Utility Functions
-const newPiece = (id: number) => new TETRIS_PIECES[Math.floor(Math.random() * TETRIS_PIECES.length)](id)
+        this.currPiece = this.newPiece(this.currPieceID)
+        this.currInterval = 0
 
-function getCompletedRows() {
+        if (this.GameMode === "Solo") {
+            this.setupPlayingArea()
 
-    const completeRows = []
-    for (let row = 0; row < ROWS - HIDDEN_ROWS; row++) {
-        if (Array.from(playingArea.children[row].children).every(box => (box as HTMLElement).style.backgroundColor !== DEFAULT_COLOR)) {
-            completeRows.push(row);
-        }
-    }
-    return completeRows
-}
-
-function togglePause(isThisInitiatizePause = false) {
-
-    clearInterval(currInterval)
-
-    if (hasWon || hasLost) return
-
-    if (!isPaused) {
-        pauseScreen.style.display = "none"
-        waitingForFriendStatus.style.display = "block"
-        mainArea.style.display = "none"
-    }
-
-
-    if (isThisInitiatizePause) {
-        pauseScreen.style.display = "block"
-        waitingForFriendStatus.style.display = "none"
-        mainArea.style.filter = "blur(10px)";
-    }
-
-    isPaused = true
-
-}
-
-function toggleContinue() {
-
-    isPaused = false;
-    waitingForFriendStatus.style.display = "none"
-    mainArea.style.filter = "none";
-    mainArea.style.display = "flex";
-    pauseScreen.style.display = "none"
-
-    startInterval()
-
-}
-
-function inGameListener(listener: KeyboardEvent) {
-
-    if (isPaused) return
-
-    const oldCoors = currPiece.coor;
-
-    const actions: { [key: string]: () => void } = {
-        Space: () => currPiece.upAllTheWay(),
-        ArrowLeft: () => currPiece.canMoveLeft() && currPiece.moveLeft(),
-        ArrowRight: () => currPiece.canMoveRight() && currPiece.moveRight(),
-        ArrowDown: () => currPiece.rotate(),
-        ArrowUp: () => currPiece.canMoveUp() && currPiece.moveUp()
-    };
-
-    actions[listener.code]?.();
-
-    uncolorCoors(oldCoors);
-
-    colorPlayingArea(currPiece, currPiece.color);
-}
-
-export function getLandingCoors(pieceId: number, currPieceCoors: [number, number][]): [number, number][] {
-    let updatedCoors = currPieceCoors;
-    while (true) {
-        if (updatedCoors.some(([row, col]) => row === 0 || (playingArea.children[row - 1].children[col] as HTMLElement).style.backgroundColor !== DEFAULT_COLOR && parseInt((playingArea.children[row - 1].children[col] as HTMLElement).id) !== pieceId)) {
-            return updatedCoors;
-        }
-        updatedCoors = updatedCoors.map(([row, col]) => [row - 1, col]);
-    }
-}
-
-function movePieceIntoPlayingArea() {
-    while (currPiece.coor.every(coor => coor[0] > HIGHEST_ALLOWED_DISPLAY_ROW)) {
-        currPiece.moveUp()
-    }
-    makeLandingCoors()
-}
-
-// check for completed rows, clear them and move up
-/*
-get completedRows list
-loop through the list using variable x1, x2, say list= [0, 2, 4, 5]
- 
-let x1 = list[idx], x2 = list[idx+1], then idx++
-1 is between 0 and 2, so row 1 move up 1 row cuz theres only 0 behind 1 in list
-3 is between 2 and 4, so row 3 move up 2 rows cuz 0, 2 are behind 3 in list
-... everything after 5 move up 4 rows cuz 0, 2, 4, 5 are behind 6 in list
- 
-therefore, 1->0, 3->1, 6->2, correct
-*/
-
-function clearRows(completedRows: number[], isFriendArea = false) {
-
-    const areaToClear = isFriendArea ? friendArea : playingArea
-
-    completedRows.forEach((upperBoundRow, idx) => {
-        const lowerBoundRow = idx === completedRows.length - 1 ? ROWS - 1 : completedRows[idx + 1] - 1;
-        for (let rowNum = upperBoundRow + 1; rowNum <= lowerBoundRow; rowNum++) {
-            const currRow = areaToClear.children[rowNum] as HTMLElement;
-            const targetRow = areaToClear.children[rowNum - (idx + 1)] as HTMLElement;
-            for (let colNum = 0; colNum < COLUMNS; colNum++) {
-                const currBox = currRow.children[colNum] as HTMLElement;
-                const targetBox = targetRow.children[colNum] as HTMLElement;
-                targetBox.style.borderColor = currBox.style.borderColor
-                currBox.style.borderColor = BORDER_DEFAULT_COLOR
-                targetBox.style.backgroundColor = currBox.style.backgroundColor;
-                currBox.style.backgroundColor = DEFAULT_COLOR;
-            }
-        }
-    });
-}
-
-function startNextRound() {
-
-    currPieceID += 1
-    currPiece = newPiece(currPieceID)
-
-    movePieceIntoPlayingArea()
-
-    startInterval()
-}
-
-function moveFriend(
-    prevCoor: [number, number][],
-    newCoor: [number, number][],
-    color: typeof COLORS[number]) {
-
-
-    prevCoor.forEach(coor => {
-        (friendArea.children.item(coor[0])?.children.item(coor[1]) as HTMLElement).style.backgroundColor = DEFAULT_COLOR
-    })
-    newCoor.forEach(coor => {
-        (friendArea.children.item(coor[0])?.children.item(coor[1]) as HTMLElement).style.backgroundColor = color
-    })
-}
-
-function shouldMultiGameStart(): Promise<void> {
-    return new Promise(async (resolve, _) => {
-        const { connection } = await import("./utility/signalR.js")
-
-        connection.on('UpdateGroupCount', (cnt: number) => cnt === 2 && resolve())
-    })
-}
-
-// Game logic
-
-function startInterval() {
-
-    currInterval = setInterval(async () => {
-
-        if (isPaused) return
-
-        if (currPiece.hitTop()) {
-
-            const completedRows = getCompletedRows()
-
-            const { notifyClearRows } = await import("./utility/signalR.js")
-
-            if (GameMode === "Friend") notifyClearRows(completedRows)
-
-            clearRows(completedRows)
-
-            clearInterval(currInterval)
-
-            if (currPiece.coor.some(coor => coor[0] > HIGHEST_ALLOWED_DISPLAY_ROW) && currPiece.hitTop()) {
-
-                hasLost = true
-
-                const { notifyGameOver } = await import("./utility/signalR.js")
-
-                if (GameMode === "Friend") await notifyGameOver()
-                window.removeEventListener('keydown', inGameListener)
-                alert("Game Over")
-            }
-
-            else startNextRound()
+            this.playingArea.style.display = "block"
+            this.startNextRound()
         }
 
-        uncolorCoors(currPiece.coor)
+        else {
 
-        currPiece.moveUp()
+            this.waitingForFriendStatus.style.display = "block";
 
-        colorPlayingArea(currPiece, currPiece.color)
+            (async () => {
 
-    }, 500 - (20 * (Math.floor(currPieceID / 5))))
-}
+                const { startSignalRConnection, joinRoom } = await import("./utility/signalR.js")
 
-window.onload = async () => {
+                await startSignalRConnection()
+                joinRoom(gameId as string)
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const gameId = urlParams.get('id');
+                shouldMultiGameStart().then(() => {
+                    this.setupSignalREventListeners()
+                    this.setupPlayingArea()
 
-    GameMode = gameId === null ? "Solo" : "Friend"
+                    this.waitingForFriendStatus.style.display = "none"
+                    this.playingArea.style.display = "block"
 
-    function setupPlayingArea() {
+                    this.startNextRound()
+                })
+            })()
+        }
 
-        for (let i = 0; i < (GameMode === "Friend" ? 2 : 1); i++) {
+        window.onblur = () => this.onWindowBlur()
+
+        this.continueButton.addEventListener('click', () => {
+            this.toggleContinue()
+        })
+    }
+
+    public setLandingCoors(_landingCoors: [number, number][]) {
+        this.landingCoors = _landingCoors
+    }
+
+    private setupPlayingArea() {
+
+        for (let i = 0; i < (this.GameMode === "Friend" ? 2 : 1); i++) {
 
             const panel = document.createElement('div')
             panel.style.border = "3px solid white"
             panel.style.padding = "4px"
 
-            if (i === 0) playingArea = panel
-            else friendArea = panel
+            if (i === 0) this.playingArea = panel
+            else this.friendArea = panel
 
             for (let row = 0; row < 22; row++) {
-                const rowOfBoxes = document.createElement('div');
+                const rowOfBoxes = document.createElement('div')
                 rowOfBoxes.style.display = "flex"
                 rowOfBoxes.style.justifyContent = "center"
                 if (row > HIGHEST_ALLOWED_DISPLAY_ROW) rowOfBoxes.style.display = "none"
 
                 for (let col = 0; col < COLUMNS; col++) {
-                    const newBox = document.createElement('div');
+                    const newBox = document.createElement('div')
                     newBox.style.width = "2rem"
                     newBox.style.height = "2rem"
                     newBox.style.backgroundColor = DEFAULT_COLOR
@@ -260,35 +109,35 @@ window.onload = async () => {
                     newBox.style.borderRadius = "1px"
                     newBox.style.margin = "1px"
                     newBox.style.borderColor = BORDER_DEFAULT_COLOR
-                    rowOfBoxes.appendChild(newBox);
+                    rowOfBoxes.appendChild(newBox)
                 }
-                panel.appendChild(rowOfBoxes);
+                panel.appendChild(rowOfBoxes)
             }
 
-            mainArea.appendChild(panel)
+            this.mainArea.appendChild(panel)
         }
 
-        window.addEventListener('keydown', inGameListener)
+        window.addEventListener('keydown', event => this.inGameListener(event))
         window.onblur = async () => {
 
-            if (GameMode === "Solo") {
-                togglePause(true)
+            if (this.GameMode === "Solo") {
+                this.togglePause(true)
                 return
             }
 
-            if (!(hasWon || hasLost)) {
+            if (!(this.hasWon || this.hasLost)) {
 
                 const { notifyPause } = await import("./utility/signalR.js")
 
                 notifyPause()
-                togglePause(true)
+                this.togglePause(true)
             }
         }
 
-        continueButton.addEventListener('click', GameMode === "Solo" ? toggleContinue : async () => {
-            waitingForFriendStatus.style.display = "block"
-            pauseScreen.style.display = "none"
-            mainArea.style.display = "none"
+        this.continueButton.addEventListener('click', this.GameMode === "Solo" ? this.toggleContinue : async () => {
+            this.waitingForFriendStatus.style.display = "block"
+            this.pauseScreen.style.display = "none"
+            this.mainArea.style.display = "none"
 
             const { requestContinue } = await import("./utility/signalR.js")
 
@@ -296,89 +145,263 @@ window.onload = async () => {
         })
     }
 
-    currPieceID = 0
+    private togglePause(isThisInitiatizePause = false) {
 
-    if (GameMode === "Solo") {
-        setupPlayingArea()
+        clearInterval(this.currInterval)
 
-        playingArea.style.display = "block"
-        startNextRound()
+        if (this.hasWon || this.hasLost) return
+
+        if (!this.isPaused) {
+            this.pauseScreen.style.display = "none"
+            this.waitingForFriendStatus.style.display = "block"
+            this.mainArea.style.display = "none"
+        }
+
+
+        if (isThisInitiatizePause) {
+            this.pauseScreen.style.display = "block"
+            this.waitingForFriendStatus.style.display = "none"
+            this.mainArea.style.filter = "blur(10px)"
+        }
+
+        this.isPaused = true
+
     }
 
-    else {
+    private toggleContinue() {
 
-        waitingForFriendStatus.style.display = "block"
+        this.isPaused = false
+        this.waitingForFriendStatus.style.display = "none"
+        this.mainArea.style.filter = "none"
+        this.mainArea.style.display = "flex"
+        this.pauseScreen.style.display = "none"
 
-        const { startSignalRConnection, joinRoom } = await import("./utility/signalR.js")
+        this.startInterval()
 
-        await startSignalRConnection()
-        joinRoom(gameId as string)
+    }
 
-        shouldMultiGameStart().then(() => {
-            setupSignalREventListeners()
-            setupPlayingArea()
+    private movePieceIntoPlayingArea() {
+        while (this.currPiece.coor.every(coor => coor[0] > HIGHEST_ALLOWED_DISPLAY_ROW)) {
+            this.currPiece.moveUp()
+        }
+        makeLandingCoors(this)
+    }
 
-            waitingForFriendStatus.style.display = "none"
-            playingArea.style.display = "block"
+    private inGameListener(listener: KeyboardEvent) {
+        if (this.isPaused) return
 
-            startNextRound()
+        const oldCoors = this.currPiece.coor
+
+        const actions: { [key: string]: () => void } = {
+            Space: () => this.currPiece.upAllTheWay(),
+            ArrowLeft: () => this.currPiece.canMoveLeft() && this.currPiece.moveLeft(),
+            ArrowRight: () => this.currPiece.canMoveRight() && this.currPiece.moveRight(),
+            ArrowDown: () => this.currPiece.rotate(),
+            ArrowUp: () => this.currPiece.canMoveUp() && this.currPiece.moveUp()
+        }
+
+        actions[listener.code]?.()
+
+        uncolorCoors(oldCoors, this.playingArea)
+        colorPlayingArea(this.currPiece, this.currPiece.color, this.playingArea)
+    }
+
+    private onWindowBlur() {
+        this.togglePause()
+    }
+
+    private startInterval() {
+
+        this.currInterval = setInterval(async () => {
+
+            if (this.isPaused) return
+
+            if (this.currPiece.hitTop()) {
+
+                const completedRows = this.getCompletedRows()
+
+                const { notifyClearRows } = await import("./utility/signalR.js")
+
+                if (this.GameMode === "Friend") notifyClearRows(completedRows)
+
+                this.clearRows(completedRows)
+
+                clearInterval(this.currInterval)
+
+                if (this.currPiece.coor.some(coor => coor[0] > HIGHEST_ALLOWED_DISPLAY_ROW) && this.currPiece.hitTop()) {
+
+                    this.hasLost = true
+
+                    const { notifyGameOver } = await import("./utility/signalR.js")
+
+                    if (this.GameMode === "Friend") await notifyGameOver()
+                    window.removeEventListener('keydown', this.inGameListener)
+                    alert("Game Over")
+                }
+
+                else this.startNextRound()
+            }
+
+            uncolorCoors(this.currPiece.coor, this.playingArea)
+
+            this.currPiece.moveUp()
+
+            colorPlayingArea(this.currPiece, this.currPiece.color, this.playingArea)
+
+        }, 500 - (20 * (Math.floor(this.currPieceID / 5))))
+    }
+
+    private getCompletedRows() {
+
+        const completeRows = []
+        for (let row = 0; row < ROWS - HIDDEN_ROWS; row++) {
+            if (Array.from(this.playingArea.children[row].children).every(box => (box as HTMLElement).style.backgroundColor !== DEFAULT_COLOR)) {
+                completeRows.push(row)
+            }
+        }
+        return completeRows
+    }
+
+    private startNextRound() {
+
+        this.currPieceID += 1
+        this.currPiece = this.newPiece(this.currPieceID)
+
+        this.movePieceIntoPlayingArea()
+
+        this.startInterval()
+    }
+
+
+    // check for completed rows, clear them and move up
+    /*
+    get completedRows list
+    loop through the list using variable x1, x2, say list= [0, 2, 4, 5]
+     
+    let x1 = list[idx], x2 = list[idx+1], then idx++
+    1 is between 0 and 2, so row 1 move up 1 row cuz theres only 0 behind 1 in list
+    3 is between 2 and 4, so row 3 move up 2 rows cuz 0, 2 are behind 3 in list
+    ... everything after 5 move up 4 rows cuz 0, 2, 4, 5 are behind 6 in list
+     
+    therefore, 1->0, 3->1, 6->2, correct
+    */
+
+    private clearRows(completedRows: number[], isFriendArea = false) {
+
+        const areaToClear = isFriendArea ? this.friendArea as HTMLElement : this.playingArea
+
+        completedRows.forEach((upperBoundRow, idx) => {
+            const lowerBoundRow = idx === completedRows.length - 1 ? ROWS - 1 : completedRows[idx + 1] - 1
+            for (let rowNum = upperBoundRow + 1; rowNum <= lowerBoundRow; rowNum++) {
+                const currRow = areaToClear.children[rowNum] as HTMLElement
+                const targetRow = areaToClear.children[rowNum - (idx + 1)] as HTMLElement
+                for (let colNum = 0; colNum < COLUMNS; colNum++) {
+                    const currBox = currRow.children[colNum] as HTMLElement
+                    const targetBox = targetRow.children[colNum] as HTMLElement
+                    targetBox.style.borderColor = currBox.style.borderColor
+                    currBox.style.borderColor = BORDER_DEFAULT_COLOR
+                    targetBox.style.backgroundColor = currBox.style.backgroundColor
+                    currBox.style.backgroundColor = DEFAULT_COLOR
+                }
+            }
         })
+    }
+
+    private moveFriend(
+        prevCoor: [number, number][],
+        newCoor: [number, number][],
+        color: typeof COLORS[number]) {
+
+
+        prevCoor.forEach(coor => {
+            ((this.friendArea as HTMLElement).children.item(coor[0])?.children.item(coor[1]) as HTMLElement).style.backgroundColor = DEFAULT_COLOR
+        })
+        newCoor.forEach(coor => {
+            ((this.friendArea as HTMLElement).children.item(coor[0])?.children.item(coor[1]) as HTMLElement).style.backgroundColor = color
+        })
+    }
+
+    // SignalR
+
+    private async setupSignalREventListeners() {
+
+        type MovementType = {
+            prevCoor: [number, number][],
+            newCoor: [number, number][],
+            color: typeof COLORS[number],
+        }
+
+        const { connection } = await import("./utility/signalR.js")
+
+        connection.on("ReceiveMovement", (data: MovementType) => {
+
+            const { prevCoor, newCoor, color } = data
+
+            this.moveFriend(prevCoor, newCoor, color)
+        })
+
+        connection.on("LeaveGame", () => {
+            alert('Your friend has left the game. Continue to go to home screen')
+            window.location.href = "/"
+        })
+
+        connection.on("ClearRows", (rows: number[]) => this.clearRows(rows, true))
+
+        connection.on("You Won", () => {
+            this.hasWon = true
+            clearInterval(this.currInterval)
+            alert("You Won!")
+            this.pauseScreen.style.display = "none"
+            this.mainArea.style.display = "flex"
+        })
+        connection.on("Pause", this.togglePause)
+        connection.on("Continue", () => {
+
+            this.waitingForFriendStatus.style.display = "none"
+            this.waitingForFriendCountdown.style.display = "block"
+
+            let remainingSeconds = 3
+
+            let interval = setInterval(() => {
+
+                if (remainingSeconds > 0) {
+                    this.waitingForFriendCountdown.innerHTML = remainingSeconds.toString()
+                    remainingSeconds--
+                }
+                else {
+                    this.waitingForFriendCountdown.innerHTML = ""
+                    this.waitingForFriendCountdown.style.display = "none"
+                    clearInterval(interval)
+                    this.toggleContinue()
+                }
+            }, 1000)
+        })
+    }
+
+    getLandingCoors(pieceId: number, currPieceCoors: [number, number][]): [number, number][] {
+        let updatedCoors = currPieceCoors
+        while (true) {
+            if (updatedCoors.some(([row, col]) => row === 0 || (this.playingArea.children[row - 1].children[col] as HTMLElement).style.backgroundColor !== DEFAULT_COLOR && parseInt((this.playingArea.children[row - 1].children[col] as HTMLElement).id) !== pieceId)) {
+                return updatedCoors
+            }
+            updatedCoors = updatedCoors.map(([row, col]) => [row - 1, col])
+        }
+    }
+
+    newPiece = (id: number) => new TETRIS_PIECES[Math.floor(Math.random() * TETRIS_PIECES.length)](this, id, this.playingArea, this.GameMode)
+
+
+    public static get HIGHEST_ALLOWED_DISPLAY_ROW() {
+        return ROWS - HIDDEN_ROWS - 1
     }
 }
 
-// SignalR
+// Utility Functions
 
-async function setupSignalREventListeners() {
+function shouldMultiGameStart(): Promise<void> {
+    return new Promise(async (resolve, _) => {
+        const { connection } = await import("./utility/signalR.js")
 
-    type MovementType = {
-        prevCoor: [number, number][],
-        newCoor: [number, number][],
-        color: typeof COLORS[number],
-    }
-
-    const { connection } = await import("./utility/signalR.js")
-
-    connection.on("ReceiveMovement", (data: MovementType) => {
-
-        const { prevCoor, newCoor, color } = data
-
-        moveFriend(prevCoor, newCoor, color)
-    })
-
-    connection.on("LeaveGame", () => {
-        alert('Your friend has left the game. Continue to go to home screen')
-        window.location.href = "/"
-    })
-
-    connection.on("ClearRows", (rows: number[]) => clearRows(rows, true))
-
-    connection.on("You Won", () => {
-        hasWon = true
-        clearInterval(currInterval)
-        alert("You Won!")
-        pauseScreen.style.display = "none"
-        mainArea.style.display = "flex"
-    })
-    connection.on("Pause", togglePause)
-    connection.on("Continue", () => {
-
-        waitingForFriendStatus.style.display = "none"
-        waitingForFriendCountdown.style.display = "block"
-
-        let remainingSeconds = 3
-
-        let interval = setInterval(() => {
-
-            if (remainingSeconds > 0) {
-                waitingForFriendCountdown.innerHTML = remainingSeconds.toString()
-                remainingSeconds--
-            }
-            else {
-                waitingForFriendCountdown.innerHTML = ""
-                waitingForFriendCountdown.style.display = "none"
-                clearInterval(interval)
-                toggleContinue()
-            }
-        }, 1000)
+        connection.on('UpdateGroupCount', (cnt: number) => cnt === 2 && resolve())
     })
 }
