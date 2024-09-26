@@ -1,6 +1,6 @@
-import { I, O, J, T, L, S, Z, TetrisPiece } from "./src/TetrisPieces.js"
-import { makeLandingCoors, uncolorCoors, colorPlayingArea } from "./src/utility/colors.js"
-import { BACKGROUND_ROWS_DISPLAYABLE, BACKGROUND_HIDDEN_ROWS, COLUMNS, DEFAULT_COLOR, BORDER_DEFAULT_COLOR } from "./src/utility/consts.js"
+import { I, O, J, T, L, S, Z, TetrisPiece } from "../TetrisPieces.js"
+import { makeLandingCoors, uncolorCoors, colorPlayingArea } from "../utility/colors.js"
+import { ROWS_DISPLAYABLE, HIDDEN_ROWS, COLUMNS, DEFAULT_COLOR, BORDER_DEFAULT_COLOR } from "../utility/consts.js"
 
 export type GameModeType = "Friend" | "Solo"
 
@@ -43,11 +43,11 @@ export class BackgroundGame {
 
         this.playingArea = panel
 
-        for (let row = 0; row < BACKGROUND_ROWS_DISPLAYABLE + BACKGROUND_HIDDEN_ROWS; row++) {
+        for (let row = 0; row < ROWS_DISPLAYABLE + HIDDEN_ROWS; row++) {
             const rowOfBoxes = document.createElement('div')
             rowOfBoxes.style.display = "flex"
             rowOfBoxes.style.justifyContent = "center"
-            if (row > BACKGROUND_ROWS_DISPLAYABLE) {
+            if (row > ROWS_DISPLAYABLE) {
                 rowOfBoxes.style.display = "none"
             }
 
@@ -69,7 +69,7 @@ export class BackgroundGame {
     }
 
     private movePieceIntoPlayingArea() {
-        while (this.currPiece.coor.some(coor => coor[0] > BACKGROUND_ROWS_DISPLAYABLE)) {
+        while (this.currPiece.coor.some(coor => coor[0] > ROWS_DISPLAYABLE)) {
             if (this.currPiece.hitTop()) {
                 this.hasLost = true
                 return
@@ -109,7 +109,7 @@ export class BackgroundGame {
     private getCompletedRows() {
 
         const completeRows = []
-        for (let row = 0; row < BACKGROUND_ROWS_DISPLAYABLE - BACKGROUND_HIDDEN_ROWS; row++) {
+        for (let row = 0; row < ROWS_DISPLAYABLE - HIDDEN_ROWS; row++) {
             if (Array.from(this.playingArea.children[row].children).every(box => (box as HTMLElement).style.backgroundColor !== DEFAULT_COLOR)) {
                 completeRows.push(row)
             }
@@ -146,7 +146,7 @@ export class BackgroundGame {
         const areaToClear = this.playingArea
 
         completedRows.forEach((upperBoundRow, idx) => {
-            const lowerBoundRow = idx === completedRows.length - 1 ? BACKGROUND_ROWS_DISPLAYABLE - 1 : completedRows[idx + 1] - 1
+            const lowerBoundRow = idx === completedRows.length - 1 ? ROWS_DISPLAYABLE - 1 : completedRows[idx + 1] - 1
             for (let rowNum = upperBoundRow + 1; rowNum <= lowerBoundRow; rowNum++) {
                 const currRow = areaToClear.children[rowNum] as HTMLElement
                 const targetRow = areaToClear.children[rowNum - (idx + 1)] as HTMLElement
@@ -174,8 +174,6 @@ export class BackgroundGame {
 
     newPiece(id: number) {
         const newPiece = new TETRIS_PIECES[Math.floor(Math.random() * TETRIS_PIECES.length)](this, id, this.playingArea, "Solo")
-        // console.log(newPiece.coor)
-
         return newPiece
     }
 }

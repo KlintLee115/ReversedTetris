@@ -1,5 +1,5 @@
-import { BackgroundGame } from "./backgroundGame"
-import { BACKGROUND_PANELS } from "./src/utility/consts"
+import { BackgroundGame } from "./BackgroundGame"
+import { BACKGROUND_PANELS } from "../utility/consts"
 
 const background = document.getElementById('background') as HTMLElement
 background.style.display = "flex"

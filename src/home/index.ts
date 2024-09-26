@@ -1,4 +1,4 @@
-import { API_URL } from "./utility/consts"
+import { API_URL } from "../utility/consts"
 
 const soloButton = document.getElementById('solo-button') as HTMLButtonElement
 const friendButton = document.getElementById('friend-button') as HTMLButtonElement
@@ -11,7 +11,7 @@ const generateRoomIdButton = document.getElementById('generateRoomIdButton') as 
 
 const friendSection = document.getElementById('friend-section') as HTMLElement
 
-soloButton.addEventListener('click', () => window.location.href = "game.html")
+soloButton.addEventListener('click', () => window.location.href = "../game.html")
 friendButton.addEventListener('click', () => {
     friendSection.style.display = "block"
 })

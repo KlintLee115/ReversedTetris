@@ -1,11 +1,11 @@
-import { I, J, L, O, S, T, TetrisPiece, Z } from './TetrisPieces.js'
-import { uncolorCoors, colorPlayingArea, makeLandingCoors } from './utility/colors.js'
-import { BORDER_DEFAULT_COLOR, COLORS, COLUMNS, DEFAULT_COLOR, HIDDEN_ROWS, ROWS } from './utility/consts.js'
+import { I, J, L, O, S, T, TetrisPiece, Z } from '../TetrisPieces.js'
+import { uncolorCoors, colorPlayingArea, makeLandingCoors } from '../utility/colors.js'
+import { BORDER_DEFAULT_COLOR, COLORS, COLUMNS, DEFAULT_COLOR, HIDDEN_ROWS, ROWS_DISPLAYABLE } from '../utility/consts.js'
 
 export type GameModeType = "Friend" | "Solo"
 
+const LOCAL_ROWS_DISPLAYABLE = Math.floor(ROWS_DISPLAYABLE * 0.9)
 export const TETRIS_PIECES = [I, O, J, T, L, S, Z]
-export const HIGHEST_ALLOWED_DISPLAY_ROW = ROWS - HIDDEN_ROWS - 1
 
 export class Game {
     private friendArea: HTMLElement | null = null
@@ -55,7 +55,7 @@ export class Game {
 
             (async () => {
 
-                const { startSignalRConnection, joinRoom } = await import("./utility/signalR.js")
+                const { startSignalRConnection, joinRoom } = await import("../utility/signalR.js")
 
                 await startSignalRConnection()
                 joinRoom(gameId as string)
@@ -94,11 +94,11 @@ export class Game {
             if (i === 0) this.playingArea = panel
             else this.friendArea = panel
 
-            for (let row = 0; row < 22; row++) {
+            for (let row = 0; row < LOCAL_ROWS_DISPLAYABLE + HIDDEN_ROWS; row++) {
                 const rowOfBoxes = document.createElement('div')
                 rowOfBoxes.style.display = "flex"
                 rowOfBoxes.style.justifyContent = "center"
-                if (row > HIGHEST_ALLOWED_DISPLAY_ROW) rowOfBoxes.style.display = "none"
+                if (row > LOCAL_ROWS_DISPLAYABLE) rowOfBoxes.style.display = "none"
 
                 for (let col = 0; col < COLUMNS; col++) {
                     const newBox = document.createElement('div')
@@ -127,7 +127,7 @@ export class Game {
 
             if (!(this.hasWon || this.hasLost)) {
 
-                const { notifyPause } = await import("./utility/signalR.js")
+                const { notifyPause } = await import("../utility/signalR.js")
 
                 notifyPause()
                 this.togglePause(true)
@@ -139,7 +139,7 @@ export class Game {
             this.pauseScreen.style.display = "none"
             this.mainArea.style.display = "none"
 
-            const { requestContinue } = await import("./utility/signalR.js")
+            const { requestContinue } = await import("../utility/signalR.js")
 
             requestContinue()
         })
@@ -180,10 +180,31 @@ export class Game {
 
     }
 
-    private movePieceIntoPlayingArea() {
-        while (this.currPiece.coor.every(coor => coor[0] > HIGHEST_ALLOWED_DISPLAY_ROW)) {
-            this.currPiece.moveUp()
+    private async movePieceIntoPlayingArea() {
+        while (this.currPiece.coor.some(coor => coor[0] > LOCAL_ROWS_DISPLAYABLE)) {
+
+            if (this.currPiece.hitTop()) {
+
+                console.log('hit top')
+                this.hasLost = true
+
+                const { notifyGameOver } = await import("../utility/signalR.js")
+
+                if (this.GameMode === "Friend") await notifyGameOver()
+                window.removeEventListener('keydown', this.inGameListener)
+                clearInterval(this.currInterval)
+                alert("Game Over")
+
+                return
+            }
+
+            else {
+                console.log('continue sewfewfewf')
+                this.currPiece.moveUp()
+            }
         }
+
+        console.log('landing coors')
         makeLandingCoors(this)
     }
 
@@ -212,15 +233,19 @@ export class Game {
 
     private startInterval() {
 
+        console.log('continue si')
+
         this.currInterval = setInterval(async () => {
 
-            if (this.isPaused) return
+            console.log('going here')
+
+            if (this.isPaused || this.hasLost) return
 
             if (this.currPiece.hitTop()) {
 
                 const completedRows = this.getCompletedRows()
 
-                const { notifyClearRows } = await import("./utility/signalR.js")
+                const { notifyClearRows } = await import("../utility/signalR.js")
 
                 if (this.GameMode === "Friend") notifyClearRows(completedRows)
 
@@ -228,33 +253,35 @@ export class Game {
 
                 clearInterval(this.currInterval)
 
-                if (this.currPiece.coor.some(coor => coor[0] > HIGHEST_ALLOWED_DISPLAY_ROW) && this.currPiece.hitTop()) {
+                console.log('here too?')
 
-                    this.hasLost = true
-
-                    const { notifyGameOver } = await import("./utility/signalR.js")
-
-                    if (this.GameMode === "Friend") await notifyGameOver()
-                    window.removeEventListener('keydown', this.inGameListener)
-                    alert("Game Over")
-                }
-
-                else this.startNextRound()
+                this.startNextRound()
             }
+
+            console.log('going here 234')
 
             uncolorCoors(this.currPiece.coor, this.playingArea)
 
-            this.currPiece.moveUp()
+            console.log('continue lmao')
+
+            if (!this.hasLost) {
+
+                this.currPiece.moveUp()
+
+            }
 
             colorPlayingArea(this.currPiece, this.currPiece.color, this.playingArea)
+
 
         }, 500 - (20 * (Math.floor(this.currPieceID / 5))))
     }
 
     private getCompletedRows() {
 
+        console.log('continue s2')
+
         const completeRows = []
-        for (let row = 0; row < ROWS - HIDDEN_ROWS; row++) {
+        for (let row = 0; row < LOCAL_ROWS_DISPLAYABLE - HIDDEN_ROWS; row++) {
             if (Array.from(this.playingArea.children[row].children).every(box => (box as HTMLElement).style.backgroundColor !== DEFAULT_COLOR)) {
                 completeRows.push(row)
             }
@@ -264,12 +291,20 @@ export class Game {
 
     private startNextRound() {
 
+        console.log('continue s3')
+
         this.currPieceID += 1
         this.currPiece = this.newPiece(this.currPieceID)
 
         this.movePieceIntoPlayingArea()
 
-        this.startInterval()
+        console.log('still continuing')
+
+        if (!this.hasLost) {
+            console.log('still continuing2')
+
+            this.startInterval()
+        }
     }
 
 
@@ -288,10 +323,12 @@ export class Game {
 
     private clearRows(completedRows: number[], isFriendArea = false) {
 
+        console.log('continue s4')
+
         const areaToClear = isFriendArea ? this.friendArea as HTMLElement : this.playingArea
 
         completedRows.forEach((upperBoundRow, idx) => {
-            const lowerBoundRow = idx === completedRows.length - 1 ? ROWS - 1 : completedRows[idx + 1] - 1
+            const lowerBoundRow = idx === completedRows.length - 1 ? LOCAL_ROWS_DISPLAYABLE - 1 : completedRows[idx + 1] - 1
             for (let rowNum = upperBoundRow + 1; rowNum <= lowerBoundRow; rowNum++) {
                 const currRow = areaToClear.children[rowNum] as HTMLElement
                 const targetRow = areaToClear.children[rowNum - (idx + 1)] as HTMLElement
@@ -331,7 +368,7 @@ export class Game {
             color: typeof COLORS[number],
         }
 
-        const { connection } = await import("./utility/signalR.js")
+        const { connection } = await import("../utility/signalR.js")
 
         connection.on("ReceiveMovement", (data: MovementType) => {
 
@@ -388,11 +425,13 @@ export class Game {
         }
     }
 
-    newPiece = (id: number) => new TETRIS_PIECES[Math.floor(Math.random() * TETRIS_PIECES.length)](this, id, this.playingArea, this.GameMode)
+    newPiece = (id: number) => {
+        console.log('continue s5')
+        return new TETRIS_PIECES[Math.floor(Math.random() * TETRIS_PIECES.length)](this, id, this.playingArea, this.GameMode)
+    }
 
-
-    public static get HIGHEST_ALLOWED_DISPLAY_ROW() {
-        return ROWS - HIDDEN_ROWS - 1
+    public static get LOCAL_ROWS_DISPLAYABLE() {
+        return LOCAL_ROWS_DISPLAYABLE - HIDDEN_ROWS - 1
     }
 }
 
@@ -400,7 +439,7 @@ export class Game {
 
 function shouldMultiGameStart(): Promise<void> {
     return new Promise(async (resolve, _) => {
-        const { connection } = await import("./utility/signalR.js")
+        const { connection } = await import("../utility/signalR.js")
 
         connection.on('UpdateGroupCount', (cnt: number) => cnt === 2 && resolve())
     })

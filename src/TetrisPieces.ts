@@ -1,7 +1,7 @@
-import { BackgroundGame } from "../backgroundGame";
-import { Game, GameModeType } from "./game";
+import { BackgroundGame } from "./home/BackgroundGame";
+import { Game, GameModeType } from "./game/GamePlayConfig";
 import { makeLandingCoors, removeLandingCoors } from "./utility/colors";
-import { BACKGROUND_HIDDEN_ROWS, BACKGROUND_ROWS_DISPLAYABLE, COLORS, DEFAULT_COLOR } from "./utility/consts";
+import { HIDDEN_ROWS, ROWS_DISPLAYABLE, COLORS, DEFAULT_COLOR } from "./utility/consts";
 import { notifyMovement } from "./utility/signalR";
 
 const COOR = {
@@ -31,10 +31,10 @@ export abstract class TetrisPiece {
         this.playingArea = playingArea
         this.GameMode = GameMode
 
-        this.centerCoor = [BACKGROUND_ROWS_DISPLAYABLE + BACKGROUND_HIDDEN_ROWS - 1, Math.floor(Math.random() * 7)];
+        this.centerCoor = [ROWS_DISPLAYABLE + HIDDEN_ROWS - 1, Math.floor(Math.random() * 7)];
         this.orientationIDX = Math.floor(Math.random() * this.getOrientations().length);
         this.coor = this.getOrientations()[this.orientationIDX]
-        
+
         this.adjustPiecePositionToBoundary();
 
         if (TetrisPiece.CURR_COLOR_IDX === COLORS.length - 1) TetrisPiece.CURR_COLOR_IDX = 0
@@ -92,6 +92,8 @@ export abstract class TetrisPiece {
 
     shiftCoor(rowOrCol: number, magnitude: number) {
 
+        console.log('continue s6')
+
         const oldCoor = this.coor
 
         this.centerCoor[rowOrCol === COOR.Row ? COOR.Row : COOR.Col] += magnitude;
@@ -106,18 +108,33 @@ export abstract class TetrisPiece {
         }
     }
 
-    moveRight = () => this.shiftCoor(1, 1)
+    moveRight = () => {
+        console.log('s9')
+        this.shiftCoor(1, 1)
+    }
 
-    moveLeft = () => this.shiftCoor(1, -1)
+    moveLeft = () => {
+        console.log('s10')
+        this.shiftCoor(1, -1)
+    }
 
-    moveUp = () => this.shiftCoor(0, -1);
+    moveUp = () => {
+        console.log('s11')
+        this.shiftCoor(0, -1);
+    }
 
     upAllTheWay() {
+
+        console.log('continue s8')
+
         while (!this.hitTop()) this.moveUp();
         this.coor = this.getOrientations()[this.orientationIDX];
     }
 
     adjustPiecePositionToBoundary() {
+
+        console.log('continue s7')
+
         this.coor.forEach((elementCoor) => {
 
             if (elementCoor[1] > 7) this.centerCoor[1] -= elementCoor[1] - 7;
