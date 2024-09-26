@@ -92,8 +92,6 @@ export class BackgroundGame {
 
                 this.clearRows(completedRows)
 
-                clearInterval(this.currInterval)
-
                 this.startNextRound()
             }
 
@@ -119,6 +117,7 @@ export class BackgroundGame {
 
     private startNextRound() {
 
+        clearInterval(this.currInterval)
         this.currPieceID += 1
         this.currPiece = this.newPiece(this.currPieceID)
 
