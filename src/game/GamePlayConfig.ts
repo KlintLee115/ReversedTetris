@@ -221,6 +221,11 @@ export class Game {
 
         uncolorCoors(oldCoors, this.playingArea)
         colorPlayingArea(this.currPiece, this.currPiece.color, this.playingArea)
+
+        if (listener.code === "Space") {
+            this.clearCompletedRows()
+            this.startNextRound()
+        }
     }
 
     private onWindowBlur = () => this.togglePause()
@@ -233,14 +238,7 @@ export class Game {
 
             if (this.currPiece.hitTop()) {
 
-                const completedRows = this.getCompletedRows()
-
-                if (this.GameMode === "Friend") {
-                    const { notifyClearRows } = await import("../utility/signalR.js")
-                    notifyClearRows(completedRows)
-                }
-                this.clearRows(completedRows)
-
+                this.clearCompletedRows()
                 this.startNextRound()
             }
 
@@ -252,6 +250,16 @@ export class Game {
             }
 
         }, 500 - (20 * (Math.floor(this.currPieceID / 5))))
+    }
+
+    private async clearCompletedRows() {
+        const completedRows = this.getCompletedRows()
+
+        if (this.GameMode === "Friend") {
+            const { notifyClearRows } = await import("../utility/signalR.js")
+            notifyClearRows(completedRows)
+        }
+        this.clearRows(completedRows)
     }
 
     private getCompletedRows() {
