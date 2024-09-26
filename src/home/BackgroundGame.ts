@@ -72,19 +72,19 @@ export class BackgroundGame {
         while (this.currPiece.coor.some(coor => coor[0] > ROWS_DISPLAYABLE)) {
             if (this.currPiece.hitTop()) {
                 this.hasLost = true
-                return
+                clearInterval(this.currInterval)
+
+                break
             }
-            this.currPiece.moveUp()
+            else this.currPiece.moveUp()
         }
-        makeLandingCoors(this)
+        colorPlayingArea(this.currPiece, this.currPiece.color, this.playingArea)
     }
 
 
     private startInterval() {
 
         this.currInterval = setInterval(async () => {
-
-            if (this.hasLost) return
 
             if (this.currPiece.hitTop()) {
 
@@ -95,12 +95,13 @@ export class BackgroundGame {
                 this.startNextRound()
             }
 
-            uncolorCoors(this.currPiece.coor, this.playingArea)
+            else {
+                uncolorCoors(this.currPiece.coor, this.playingArea)
 
-            this.currPiece.moveUp()
+                this.currPiece.moveUp()
 
-            colorPlayingArea(this.currPiece, this.currPiece.color, this.playingArea)
-
+                colorPlayingArea(this.currPiece, this.currPiece.color, this.playingArea)
+            }
         }, 50 - (this.currPieceID * 0.5))
     }
 
@@ -123,7 +124,10 @@ export class BackgroundGame {
 
         this.movePieceIntoPlayingArea()
 
-        this.startInterval()
+        if (!this.hasLost) {
+            this.startInterval()
+            makeLandingCoors(this)
+        }
     }
 
 
