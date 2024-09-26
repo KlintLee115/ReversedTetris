@@ -1,5 +1,5 @@
-import { BackgroundGame } from "./home/BackgroundGameConfig";
-import { Game, GameModeType } from "./game/GamePlayConfig";
+import { GameModeType } from "./game/GamePlayConfig";
+import { Tetris } from "./lib/Tetris";
 import { makeLandingCoors, removeLandingCoors } from "./utility/colors";
 import { HIDDEN_ROWS, ROWS_DISPLAYABLE, COLORS, DEFAULT_COLOR } from "./utility/consts";
 import { notifyMovement } from "./utility/signalR";
@@ -15,7 +15,7 @@ export abstract class TetrisPiece {
     private static CURR_COLOR_IDX = 0;
     private playingArea: HTMLElement
     private GameMode: GameModeType
-    private Game: Game | BackgroundGame
+    private Game: Tetris
 
     protected centerCoor: [number, number];
     protected orientationIDX: number;
@@ -23,7 +23,7 @@ export abstract class TetrisPiece {
     public color: string;
     public coor: [number, number][];
 
-    constructor(game: Game | BackgroundGame, newId: number, playingArea: HTMLElement, GameMode: GameModeType) {
+    constructor(game: Tetris, newId: number, playingArea: HTMLElement, GameMode: GameModeType) {
 
         this.Game = game
         this.color = COLORS[TetrisPiece.CURR_COLOR_IDX];
