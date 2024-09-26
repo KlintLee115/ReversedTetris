@@ -1,6 +1,5 @@
 import { Tetris } from "../lib/Tetris.js"
 import { I, O, J, T, L, S, Z } from "../TetrisPieces.js"
-import { colorPlayingArea } from "../utility/colors.js"
 import { ROWS_DISPLAYABLE, HIDDEN_ROWS, COLUMNS, DEFAULT_COLOR, BORDER_DEFAULT_COLOR } from "../utility/consts.js"
 
 export type GameModeType = "Friend" | "Solo"
@@ -13,7 +12,7 @@ export class BackgroundGame extends Tetris {
         this.setupPlayingArea()
 
         this.playingArea.style.display = "block"
-        this.startNextRound()
+        this.startNextRound(false)
     }
 
     constructor(mainArea: HTMLElement) {
@@ -53,22 +52,5 @@ export class BackgroundGame extends Tetris {
         }
 
         this.mainArea.appendChild(panel)
-    }
-
-    override movePieceIntoPlayingArea() {
-        while (this.currPiece.coor.some(coor => coor[0] > ROWS_DISPLAYABLE)) {
-            if (this.currPiece.hitTop()) {
-                this.hasLost = true
-                clearInterval(this.currInterval)
-
-                break
-            }
-            else this.currPiece.moveUp()
-        }
-        colorPlayingArea(this.currPiece, this.currPiece.color, this.playingArea)
-    }
-
-    override newPiece() {
-        return new TETRIS_PIECES[Math.floor(Math.random() * TETRIS_PIECES.length)](this, this.currPieceID, this.playingArea, "Solo")
     }
 }

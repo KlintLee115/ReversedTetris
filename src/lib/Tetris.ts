@@ -1,6 +1,9 @@
-import { TetrisPiece } from "../TetrisPieces.ts";
+import { GameModeType } from "../game/GamePlayConfig.ts";
+import { I, J, L, O, S, T, TetrisPiece, Z } from "../TetrisPieces.ts";
 import { colorPlayingArea, makeLandingCoors, uncolorCoors } from "../utility/colors.ts";
 import { BORDER_DEFAULT_COLOR, COLUMNS, DEFAULT_COLOR, HIDDEN_ROWS } from "../utility/consts.ts";
+
+const TETRIS_PIECES = [I, O, J, T, L, S, Z]
 
 export abstract class Tetris {
 
@@ -41,13 +44,13 @@ export abstract class Tetris {
         }
     }
 
-    protected startNextRound() {
+    protected startNextRound(notifyFriend: boolean) {
 
         clearInterval(this.currInterval)
         this.currPieceID += 1
         this.currPiece = this.newPiece()
 
-        this.movePieceIntoPlayingArea()
+        this.movePieceIntoPlayingArea(notifyFriend)
 
         if (!this.hasLost) {
             this.startInterval(false)
@@ -75,7 +78,7 @@ export abstract class Tetris {
             if (this.currPiece.hitTop()) {
 
                 this.clearRows(this.playingArea, shouldNotifyFriend)
-                this.startNextRound()
+                this.startNextRound(shouldNotifyFriend)
             }
 
             else {
@@ -87,7 +90,7 @@ export abstract class Tetris {
 
         }, this.intervalBaseTime - (20 * (Math.floor(this.currPieceID / 5))))
     }
-    
+
     // check for completed rows, clear them and move up
     /*
     get completedRows list
@@ -104,8 +107,6 @@ export abstract class Tetris {
     protected async clearRows(areaToClear: HTMLElement, notifyFriend: boolean) {
 
         const completedRows = this.getCompletedRows()
-
-        console.log(areaToClear)
 
         if (notifyFriend) {
             const { notifyClearRows } = await import("../utility/signalR.ts")
@@ -131,9 +132,30 @@ export abstract class Tetris {
         })
     }
 
-    abstract newPiece(): TetrisPiece
+    
+    private async movePieceIntoPlayingArea(notifyFriend: boolean) {
+        while (this.currPiece.coor.some(coor => coor[0] > this.rowsDisplayable)) {
+            if (this.currPiece.hitTop()) {
+                this.hasLost = true
+                clearInterval(this.currInterval)
+
+                if (notifyFriend) {
+                    const { notifyGameOver } = await import("../utility/signalR.ts")
+
+                    await notifyGameOver()
+                }
+
+                alert("Game Over")
+
+                break
+            }
+            else this.currPiece.moveUp()
+        }
+        colorPlayingArea(this.currPiece, this.currPiece.color, this.playingArea)
+    }
+
+    protected newPiece = (GameMode: GameModeType = "Solo") => new TETRIS_PIECES[Math.floor(Math.random() * TETRIS_PIECES.length)](this, this.currPieceID, this.playingArea, GameMode)
 
     abstract setupPlayingArea(): void
 
-    abstract movePieceIntoPlayingArea() : void
 }

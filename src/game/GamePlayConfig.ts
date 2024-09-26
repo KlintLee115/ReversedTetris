@@ -1,12 +1,10 @@
 import { Tetris } from '../lib/Tetris.ts'
-import { I, J, L, O, S, T, Z } from '../TetrisPieces.js'
 import { uncolorCoors, colorPlayingArea } from '../utility/colors.js'
 import { BORDER_DEFAULT_COLOR, COLORS, COLUMNS, DEFAULT_COLOR, HIDDEN_ROWS, ROWS_DISPLAYABLE } from '../utility/consts.js'
 
 export type GameModeType = "Friend" | "Solo"
 
 const LOCAL_ROWS_DISPLAYABLE = Math.floor(ROWS_DISPLAYABLE * 0.9)
-export const TETRIS_PIECES = [I, O, J, T, L, S, Z]
 
 export class Game extends Tetris {
     private friendArea: HTMLElement | null = null
@@ -32,12 +30,11 @@ export class Game extends Tetris {
 
         this.GameMode = gameId === null ? "Solo" : "Friend"
 
-
         if (this.GameMode === "Solo") {
             this.setupPlayingArea()
 
             this.playingArea.style.display = "block"
-            this.startNextRound()
+            this.startNextRound(false)
         }
 
         else {
@@ -58,7 +55,7 @@ export class Game extends Tetris {
                     this.waitingForFriendStatus.style.display = "none"
                     this.playingArea.style.display = "block"
 
-                    this.startNextRound()
+                    this.startNextRound(true)
                 })
             })()
         }
@@ -105,31 +102,32 @@ export class Game extends Tetris {
         }
 
         window.addEventListener('keydown', event => this.inGameListener(event))
-        window.onblur = async () => {
 
-            if (this.GameMode === "Solo") {
+        if (this.GameMode === "Friend") {
+            window.onblur = async () => {
+
                 this.togglePause(true)
-                return
+
+                // neither won or lost then trigger pause
+                if (!(this.hasWon || this.hasLost)) {
+
+                    const { notifyPause } = await import("../utility/signalR.ts")
+
+                    notifyPause()
+                    this.togglePause(true)
+                }
             }
 
-            if (!(this.hasWon || this.hasLost)) {
+            this.continueButton.addEventListener('click', async () => {
+                this.waitingForFriendStatus.style.display = "block"
+                this.pauseScreen.style.display = "none"
+                this.mainArea.style.display = "none"
 
-                const { notifyPause } = await import("../utility/signalR.ts")
+                const { requestContinue } = await import("../utility/signalR.ts")
 
-                notifyPause()
-                this.togglePause(true)
-            }
+                requestContinue()
+            })
         }
-
-        this.continueButton.addEventListener('click', this.GameMode === "Solo" ? this.toggleContinue : async () => {
-            this.waitingForFriendStatus.style.display = "block"
-            this.pauseScreen.style.display = "none"
-            this.mainArea.style.display = "none"
-
-            const { requestContinue } = await import("../utility/signalR.ts")
-
-            requestContinue()
-        })
     }
 
     private togglePause(isThisInitiatizePause = false) {
@@ -167,30 +165,6 @@ export class Game extends Tetris {
 
     }
 
-    override async movePieceIntoPlayingArea() {
-
-        while (this.currPiece.coor.some(coor => coor[0] > LOCAL_ROWS_DISPLAYABLE)) {
-
-            if (this.currPiece.hitTop()) {
-
-                this.hasLost = true
-
-                const { notifyGameOver } = await import("../utility/signalR.ts")
-
-                if (this.GameMode === "Friend") await notifyGameOver()
-                window.removeEventListener('keydown', this.inGameListener)
-                clearInterval(this.currInterval)
-                alert("Game Over")
-
-                break
-            }
-
-            else this.currPiece.moveUp()
-        }
-
-        colorPlayingArea(this.currPiece, this.currPiece.color, this.playingArea)
-    }
-
     private inGameListener(listener: KeyboardEvent) {
         if (this.isPaused) return
 
@@ -211,11 +185,11 @@ export class Game extends Tetris {
 
         if (listener.code === "Space") {
             this.clearRows(this.playingArea, this.GameMode === "Friend")
-            this.startNextRound()
+            this.startNextRound(this.GameMode === "Friend")
         }
     }
 
-    private onWindowBlur = () => this.togglePause()
+    private onWindowBlur = () => this.GameMode === "Friend" && this.togglePause()
 
     private moveFriend(
         prevCoor: [number, number][],
@@ -286,10 +260,6 @@ export class Game extends Tetris {
                 }
             }, 1000)
         })
-    }
-
-    override newPiece() {
-        return new TETRIS_PIECES[Math.floor(Math.random() * TETRIS_PIECES.length)](this, this.currPieceID, this.playingArea, this.GameMode)
     }
 }
 
