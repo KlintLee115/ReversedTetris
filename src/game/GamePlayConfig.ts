@@ -181,11 +181,11 @@ export class Game {
     }
 
     private async movePieceIntoPlayingArea() {
+
         while (this.currPiece.coor.some(coor => coor[0] > LOCAL_ROWS_DISPLAYABLE)) {
 
             if (this.currPiece.hitTop()) {
 
-                console.log('hit top')
                 this.hasLost = true
 
                 const { notifyGameOver } = await import("../utility/signalR.js")
@@ -195,17 +195,13 @@ export class Game {
                 clearInterval(this.currInterval)
                 alert("Game Over")
 
-                return
+                break
             }
 
-            else {
-                console.log('continue sewfewfewf')
-                this.currPiece.moveUp()
-            }
+            else this.currPiece.moveUp()
         }
 
-        console.log('landing coors')
-        makeLandingCoors(this)
+        colorPlayingArea(this.currPiece, this.currPiece.color, this.playingArea)
     }
 
     private inGameListener(listener: KeyboardEvent) {
@@ -227,58 +223,38 @@ export class Game {
         colorPlayingArea(this.currPiece, this.currPiece.color, this.playingArea)
     }
 
-    private onWindowBlur() {
-        this.togglePause()
-    }
+    private onWindowBlur = () => this.togglePause()
 
     private startInterval() {
 
-        console.log('continue si')
-
         this.currInterval = setInterval(async () => {
 
-            console.log('going here')
-
-            if (this.isPaused || this.hasLost) return
+            if (this.isPaused) return
 
             if (this.currPiece.hitTop()) {
 
                 const completedRows = this.getCompletedRows()
 
-                const { notifyClearRows } = await import("../utility/signalR.js")
-
-                if (this.GameMode === "Friend") notifyClearRows(completedRows)
-
+                if (this.GameMode === "Friend") {
+                    const { notifyClearRows } = await import("../utility/signalR.js")
+                    notifyClearRows(completedRows)
+                }
                 this.clearRows(completedRows)
-
-                clearInterval(this.currInterval)
-
-                console.log('here too?')
 
                 this.startNextRound()
             }
 
-            console.log('going here 234')
-
-            uncolorCoors(this.currPiece.coor, this.playingArea)
-
-            console.log('continue lmao')
-
-            if (!this.hasLost) {
-
+            else {
+                uncolorCoors(this.currPiece.coor, this.playingArea)
                 this.currPiece.moveUp()
 
+                colorPlayingArea(this.currPiece, this.currPiece.color, this.playingArea)
             }
-
-            colorPlayingArea(this.currPiece, this.currPiece.color, this.playingArea)
-
 
         }, 500 - (20 * (Math.floor(this.currPieceID / 5))))
     }
 
     private getCompletedRows() {
-
-        console.log('continue s2')
 
         const completeRows = []
         for (let row = 0; row < LOCAL_ROWS_DISPLAYABLE - HIDDEN_ROWS; row++) {
@@ -291,19 +267,15 @@ export class Game {
 
     private startNextRound() {
 
-        console.log('continue s3')
-
+        clearInterval(this.currInterval)
         this.currPieceID += 1
         this.currPiece = this.newPiece(this.currPieceID)
 
-        this.movePieceIntoPlayingArea()
-
-        console.log('still continuing')
+        this.movePieceIntoPlayingArea() // updates this.hasLost to true if fail to move piece into playing area
 
         if (!this.hasLost) {
-            console.log('still continuing2')
-
             this.startInterval()
+            makeLandingCoors(this)
         }
     }
 
@@ -322,8 +294,6 @@ export class Game {
     */
 
     private clearRows(completedRows: number[], isFriendArea = false) {
-
-        console.log('continue s4')
 
         const areaToClear = isFriendArea ? this.friendArea as HTMLElement : this.playingArea
 
@@ -426,7 +396,6 @@ export class Game {
     }
 
     newPiece = (id: number) => {
-        console.log('continue s5')
         return new TETRIS_PIECES[Math.floor(Math.random() * TETRIS_PIECES.length)](this, id, this.playingArea, this.GameMode)
     }
 

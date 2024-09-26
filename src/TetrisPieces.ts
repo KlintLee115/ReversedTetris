@@ -81,7 +81,7 @@ export abstract class TetrisPiece {
             const rowAbove = this.playingArea.children.item(row - 1) as HTMLElement;
             const boxAbove = rowAbove?.children.item(col) as HTMLElement;
             return row === 0 || (boxAbove && ![DEFAULT_COLOR].includes(boxAbove.style.backgroundColor) && parseInt(boxAbove.id) !== this.id);
-        });
+        })
     }
 
     canMoveRight = () => this.canMove(this.coor.map(([row, col]) => [row, col + 1] as [number, number]))
@@ -91,8 +91,6 @@ export abstract class TetrisPiece {
     canMoveUp = () => this.canMove(this.coor.map(([row, col]) => [row - 1, col] as [number, number]));
 
     shiftCoor(rowOrCol: number, magnitude: number) {
-
-        console.log('continue s6')
 
         const oldCoor = this.coor
 
@@ -108,24 +106,13 @@ export abstract class TetrisPiece {
         }
     }
 
-    moveRight = () => {
-        console.log('s9')
-        this.shiftCoor(1, 1)
-    }
+    moveRight = () => this.shiftCoor(1, 1)
 
-    moveLeft = () => {
-        console.log('s10')
-        this.shiftCoor(1, -1)
-    }
+    moveLeft = () => this.shiftCoor(1, -1)
 
-    moveUp = () => {
-        console.log('s11')
-        this.shiftCoor(0, -1);
-    }
+    moveUp = () => this.shiftCoor(0, -1)
 
     upAllTheWay() {
-
-        console.log('continue s8')
 
         while (!this.hitTop()) this.moveUp();
         this.coor = this.getOrientations()[this.orientationIDX];
@@ -133,14 +120,12 @@ export abstract class TetrisPiece {
 
     adjustPiecePositionToBoundary() {
 
-        console.log('continue s7')
-
-        this.coor.forEach((elementCoor) => {
+        this.coor.forEach(elementCoor => {
 
             if (elementCoor[1] > 7) this.centerCoor[1] -= elementCoor[1] - 7;
 
             if (elementCoor[1] < 0) this.centerCoor[1] -= elementCoor[1];
-        });
+        })
         this.coor = this.getOrientations()[this.orientationIDX];
     }
 }
