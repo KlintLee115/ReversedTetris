@@ -39,7 +39,7 @@ export class Game {
 
         this.GameMode = gameId === null ? "Solo" : "Friend"
 
-        this.currPiece = this.newPiece(this.currPieceID)
+        this.currPiece = this.newPiece()
         this.currInterval = 0
 
         if (this.GameMode === "Solo") {
@@ -55,7 +55,7 @@ export class Game {
 
             (async () => {
 
-                const { startSignalRConnection, joinRoom } = await import("../utility/signalR.js")
+                const { startSignalRConnection, joinRoom } = await import("../utility/signalR.ts")
 
                 await startSignalRConnection()
                 joinRoom(gameId as string)
@@ -127,7 +127,7 @@ export class Game {
 
             if (!(this.hasWon || this.hasLost)) {
 
-                const { notifyPause } = await import("../utility/signalR.js")
+                const { notifyPause } = await import("../utility/signalR.ts")
 
                 notifyPause()
                 this.togglePause(true)
@@ -139,7 +139,7 @@ export class Game {
             this.pauseScreen.style.display = "none"
             this.mainArea.style.display = "none"
 
-            const { requestContinue } = await import("../utility/signalR.js")
+            const { requestContinue } = await import("../utility/signalR.ts")
 
             requestContinue()
         })
@@ -188,7 +188,7 @@ export class Game {
 
                 this.hasLost = true
 
-                const { notifyGameOver } = await import("../utility/signalR.js")
+                const { notifyGameOver } = await import("../utility/signalR.ts")
 
                 if (this.GameMode === "Friend") await notifyGameOver()
                 window.removeEventListener('keydown', this.inGameListener)
@@ -256,7 +256,7 @@ export class Game {
         const completedRows = this.getCompletedRows()
 
         if (this.GameMode === "Friend") {
-            const { notifyClearRows } = await import("../utility/signalR.js")
+            const { notifyClearRows } = await import("../utility/signalR.ts")
             notifyClearRows(completedRows)
         }
         this.clearRows(completedRows)
@@ -277,7 +277,7 @@ export class Game {
 
         clearInterval(this.currInterval)
         this.currPieceID += 1
-        this.currPiece = this.newPiece(this.currPieceID)
+        this.currPiece = this.newPiece()
 
         this.movePieceIntoPlayingArea() // updates this.hasLost to true if fail to move piece into playing area
 
@@ -346,7 +346,7 @@ export class Game {
             color: typeof COLORS[number],
         }
 
-        const { connection } = await import("../utility/signalR.js")
+        const { connection } = await import("../utility/signalR.ts")
 
         connection.on("ReceiveMovement", (data: MovementType) => {
 
@@ -403,12 +403,8 @@ export class Game {
         }
     }
 
-    newPiece = (id: number) => {
-        return new TETRIS_PIECES[Math.floor(Math.random() * TETRIS_PIECES.length)](this, id, this.playingArea, this.GameMode)
-    }
-
-    public static get LOCAL_ROWS_DISPLAYABLE() {
-        return LOCAL_ROWS_DISPLAYABLE - HIDDEN_ROWS - 1
+    newPiece = () => {
+        return new TETRIS_PIECES[Math.floor(Math.random() * TETRIS_PIECES.length)](this, this.currPieceID, this.playingArea, this.GameMode)
     }
 }
 
@@ -416,7 +412,7 @@ export class Game {
 
 function shouldMultiGameStart(): Promise<void> {
     return new Promise(async (resolve, _) => {
-        const { connection } = await import("../utility/signalR.js")
+        const { connection } = await import("../utility/signalR.ts")
 
         connection.on('UpdateGroupCount', (cnt: number) => cnt === 2 && resolve())
     })

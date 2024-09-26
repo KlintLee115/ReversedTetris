@@ -1,4 +1,4 @@
-import { BackgroundGame } from "./BackgroundGame"
+import { BackgroundGame } from "./BackgroundGameConfig"
 import { BACKGROUND_PANELS } from "../utility/consts"
 
 const background = document.getElementById('background') as HTMLElement

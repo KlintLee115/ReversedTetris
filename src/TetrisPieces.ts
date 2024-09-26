@@ -1,4 +1,4 @@
-import { BackgroundGame } from "./home/BackgroundGame";
+import { BackgroundGame } from "./home/BackgroundGameConfig";
 import { Game, GameModeType } from "./game/GamePlayConfig";
 import { makeLandingCoors, removeLandingCoors } from "./utility/colors";
 import { HIDDEN_ROWS, ROWS_DISPLAYABLE, COLORS, DEFAULT_COLOR } from "./utility/consts";
