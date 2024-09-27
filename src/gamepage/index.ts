@@ -1,4 +1,4 @@
-import { Game } from "./GamePlayConfig"
+import { Game } from "../core/GamePlayConfig"
 
 const mainArea = document.getElementsByTagName('main').item(0)!;
 const pauseScreen = document.getElementById('pauseScreen')!;

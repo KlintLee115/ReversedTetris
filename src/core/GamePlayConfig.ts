@@ -1,6 +1,6 @@
-import { Tetris } from '../lib/Tetris.ts'
-import { uncolorCoors, colorPlayingArea } from '../utility/colors.js'
-import { BORDER_DEFAULT_COLOR, COLORS, COLUMNS, DEFAULT_COLOR, HIDDEN_ROWS, ROWS_DISPLAYABLE } from '../utility/consts.js'
+import { Tetris } from './Tetris.ts'
+import { uncolorCoors, colorPlayingArea } from '../utils/colors.js'
+import { COLORS, DEFAULT_COLOR, ROWS_DISPLAYABLE } from '../utils/consts.js'
 
 export type GameModeType = "Friend" | "Solo"
 
@@ -43,7 +43,7 @@ export class Game extends Tetris {
 
             (async () => {
 
-                const { startSignalRConnection, joinRoom } = await import("../utility/signalR.ts")
+                const { startSignalRConnection, joinRoom } = await import("../utils/signalR.ts")
 
                 await startSignalRConnection()
                 joinRoom(gameId as string)
@@ -60,7 +60,7 @@ export class Game extends Tetris {
             })()
         }
 
-        window.onblur = () => this.onWindowBlur()
+        // window.onblur = () => this.onWindowBlur()
 
         this.continueButton.addEventListener('click', () => {
             this.toggleContinue()
@@ -78,25 +78,7 @@ export class Game extends Tetris {
             if (i === 0) this.playingArea = panel
             else this.friendArea = panel
 
-            for (let row = 0; row < LOCAL_ROWS_DISPLAYABLE + HIDDEN_ROWS; row++) {
-                const rowOfBoxes = document.createElement('div')
-                rowOfBoxes.style.display = "flex"
-                rowOfBoxes.style.justifyContent = "center"
-                if (row > LOCAL_ROWS_DISPLAYABLE) rowOfBoxes.style.display = "none"
-
-                for (let col = 0; col < COLUMNS; col++) {
-                    const newBox = document.createElement('div')
-                    newBox.style.width = "2rem"
-                    newBox.style.height = "2rem"
-                    newBox.style.backgroundColor = DEFAULT_COLOR
-                    newBox.style.border = "1px solid"
-                    newBox.style.borderRadius = "1px"
-                    newBox.style.margin = "1px"
-                    newBox.style.borderColor = BORDER_DEFAULT_COLOR
-                    rowOfBoxes.appendChild(newBox)
-                }
-                panel.appendChild(rowOfBoxes)
-            }
+            this.addRowsForSetup(panel)
 
             this.mainArea.appendChild(panel)
         }
@@ -104,26 +86,24 @@ export class Game extends Tetris {
         window.addEventListener('keydown', event => this.inGameListener(event))
 
         if (this.GameMode === "Friend") {
-            window.onblur = async () => {
+            // window.onblur = async () => {
 
-                this.togglePause(true)
+            //     // neither won or lost then trigger pause
+            //     if (!(this.hasWon || this.hasLost)) {
 
-                // neither won or lost then trigger pause
-                if (!(this.hasWon || this.hasLost)) {
+            //         const { notifyPause } = await import("../utils/signalR.ts")
 
-                    const { notifyPause } = await import("../utility/signalR.ts")
-
-                    notifyPause()
-                    this.togglePause(true)
-                }
-            }
+            //         notifyPause()
+            //         this.togglePause(true)
+            //     }
+            // }
 
             this.continueButton.addEventListener('click', async () => {
                 this.waitingForFriendStatus.style.display = "block"
                 this.pauseScreen.style.display = "none"
                 this.mainArea.style.display = "none"
 
-                const { requestContinue } = await import("../utility/signalR.ts")
+                const { requestContinue } = await import("../utils/signalR.ts")
 
                 requestContinue()
             })
@@ -136,18 +116,9 @@ export class Game extends Tetris {
 
         if (this.hasWon || this.hasLost) return
 
-        if (!this.isPaused) {
-            this.pauseScreen.style.display = "none"
-            this.waitingForFriendStatus.style.display = "block"
-            this.mainArea.style.display = "none"
-        }
-
-
-        if (isThisInitiatizePause) {
-            this.pauseScreen.style.display = "block"
-            this.waitingForFriendStatus.style.display = "none"
-            this.mainArea.style.filter = "blur(10px)"
-        }
+        this.pauseScreen.style.display = isThisInitiatizePause ? "block" : "none"
+        this.waitingForFriendStatus.style.display = isThisInitiatizePause ? "none" : "block"
+        this.mainArea.style.filter = isThisInitiatizePause ? "blur(10px)" : ""
 
         this.isPaused = true
 
@@ -161,7 +132,7 @@ export class Game extends Tetris {
         this.mainArea.style.display = "flex"
         this.pauseScreen.style.display = "none"
 
-        this.startInterval(this.isPaused)
+        this.startInterval(this.isPaused, this.GameMode === "Friend")
 
     }
 
@@ -169,13 +140,14 @@ export class Game extends Tetris {
         if (this.isPaused) return
 
         const oldCoors = this.currPiece.coor
+        const shouldNotifyFriend = this.GameMode === "Friend"
 
         const actions: { [key: string]: () => void } = {
-            Space: () => this.currPiece.upAllTheWay(),
-            ArrowLeft: () => this.currPiece.canMoveLeft() && this.currPiece.moveLeft(),
-            ArrowRight: () => this.currPiece.canMoveRight() && this.currPiece.moveRight(),
-            ArrowDown: () => this.currPiece.rotate(),
-            ArrowUp: () => this.currPiece.canMoveUp() && this.currPiece.moveUp()
+            Space: () => this.currPiece.upAllTheWay(shouldNotifyFriend),
+            ArrowLeft: () => this.currPiece.canMoveLeft() && this.currPiece.moveLeft(shouldNotifyFriend),
+            ArrowRight: () => this.currPiece.canMoveRight() && this.currPiece.moveRight(shouldNotifyFriend),
+            ArrowDown: () => this.currPiece.rotate(shouldNotifyFriend),
+            ArrowUp: () => this.currPiece.canMoveUp() && this.currPiece.moveUp(shouldNotifyFriend)
         }
 
         actions[listener.code]?.()
@@ -184,25 +156,19 @@ export class Game extends Tetris {
         colorPlayingArea(this.currPiece, this.currPiece.color, this.playingArea)
 
         if (listener.code === "Space") {
-            this.clearRows(this.playingArea, this.GameMode === "Friend")
-            this.startNextRound(this.GameMode === "Friend")
+            this.clearRows(this.playingArea, shouldNotifyFriend)
         }
     }
 
     private onWindowBlur = () => this.GameMode === "Friend" && this.togglePause()
 
-    private moveFriend(
-        prevCoor: [number, number][],
-        newCoor: [number, number][],
-        color: typeof COLORS[number]) {
+    private moveFriend(prevCoor: [number, number][], newCoor: [number, number][], color: typeof COLORS[number]) {
+        this.updateArea(prevCoor, DEFAULT_COLOR, this.friendArea as HTMLElement)
+        this.updateArea(newCoor, color, this.friendArea as HTMLElement)
+    }
 
-
-        prevCoor.forEach(coor => {
-            ((this.friendArea as HTMLElement).children.item(coor[0])?.children.item(coor[1]) as HTMLElement).style.backgroundColor = DEFAULT_COLOR
-        })
-        newCoor.forEach(coor => {
-            ((this.friendArea as HTMLElement).children.item(coor[0])?.children.item(coor[1]) as HTMLElement).style.backgroundColor = color
-        })
+    private updateArea(coors: [number, number][], color: string, area: HTMLElement) {
+        coors.forEach(coor => (area.children.item(coor[0])?.children.item(coor[1]) as HTMLElement).style.backgroundColor = color)
     }
 
     // SignalR
@@ -215,11 +181,13 @@ export class Game extends Tetris {
             color: typeof COLORS[number],
         }
 
-        const { connection } = await import("../utility/signalR.ts")
+        const { connection } = await import("../utils/signalR.ts")
 
         connection.on("ReceiveMovement", (data: MovementType) => {
 
             const { prevCoor, newCoor, color } = data
+
+            console.log('amazing')
 
             this.moveFriend(prevCoor, newCoor, color)
         })
@@ -229,7 +197,9 @@ export class Game extends Tetris {
             window.location.href = "/"
         })
 
-        connection.on("ClearRows", () => this.clearRows(this.playingArea, false))
+        connection.on("ClearRows", () => {
+            this.clearRows(this.friendArea as HTMLElement, false)
+        })
 
         connection.on("You Won", () => {
             this.hasWon = true
@@ -267,7 +237,7 @@ export class Game extends Tetris {
 
 function shouldMultiGameStart(): Promise<void> {
     return new Promise(async (resolve, _) => {
-        const { connection } = await import("../utility/signalR.ts")
+        const { connection } = await import("../utils/signalR.ts")
 
         connection.on('UpdateGroupCount', (cnt: number) => cnt === 2 && resolve())
     })

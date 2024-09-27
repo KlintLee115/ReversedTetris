@@ -1,7 +1,7 @@
 import { darken, lighten } from "polished";
 import { TetrisPiece } from "../TetrisPieces";
 import { BORDER_DEFAULT_COLOR, DEFAULT_COLOR } from "./consts"
-import { Tetris } from "../lib/Tetris";
+import { Tetris } from "../core/Tetris";
 
 export function colorBlock(row: number, col: number, color: string, playingArea: HTMLElement) {
 

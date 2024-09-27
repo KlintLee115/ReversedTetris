@@ -1,5 +1,5 @@
-import { BACKGROUND_PANELS } from "../utility/consts"
-import { BackgroundGame } from "./BackgroundGameConfig"
+import { HomeBackgroundConfig } from "../core/BackgroundGameConfig"
+import { BACKGROUND_PANELS } from "../utils/consts"
 
 const background = document.getElementById('background') as HTMLElement
 background.style.display = "flex"
@@ -11,7 +11,7 @@ background.style.overflow = "hidden"
 for (let i = 0; i < BACKGROUND_PANELS; i++) {
     for (let i = 0; i < 1; i++) {
         const section = document.createElement('section')
-        new BackgroundGame(section)
+        new HomeBackgroundConfig(section)
 
         background.appendChild(section)
     }
