@@ -60,7 +60,14 @@ export class Game extends Tetris {
             })()
         }
 
-        // window.onblur = () => this.onWindowBlur()
+        window.onblur = async () => {
+
+            this.togglePause()
+
+            const { notifyPause } = await import("../utils/signalR.ts")
+
+            notifyPause()
+        }
     }
 
     override setupPlayingArea() {
@@ -82,17 +89,6 @@ export class Game extends Tetris {
         window.addEventListener('keydown', event => this.inGameListener(event))
 
         if (this.GameMode === "Friend") {
-            // window.onblur = async () => {
-
-            //     // neither won or lost then trigger pause
-            //     if (!(this.hasWon || this.hasLost)) {
-
-            //         const { notifyPause } = await import("../utils/signalR.ts")
-
-            //         notifyPause()
-            //         this.togglePause(true)
-            //     }
-            // }
 
             this.continueButton.addEventListener('click', async () => {
                 this.waitingForFriendStatus.style.display = "block"
@@ -142,14 +138,7 @@ export class Game extends Tetris {
             ArrowLeft: () => this.currPiece.canMoveLeft() && this.currPiece.moveLeft(shouldNotifyFriend),
             ArrowRight: () => this.currPiece.canMoveRight() && this.currPiece.moveRight(shouldNotifyFriend),
             ArrowDown: () => this.currPiece.rotate(shouldNotifyFriend),
-            ArrowUp: () => this.currPiece.canMoveUp() && this.currPiece.moveUp(shouldNotifyFriend),
-            Enter: async () => {
-                this.togglePause()
-
-                const { notifyPause } = await import("../utils/signalR.ts")
-
-                notifyPause()
-            }
+            ArrowUp: () => this.currPiece.canMoveUp() && this.currPiece.moveUp(shouldNotifyFriend)
         }
 
         actions[listener.code]?.()
@@ -159,8 +148,6 @@ export class Game extends Tetris {
             this.startNextRound(shouldNotifyFriend)
         }
     }
-
-    // private onWindowBlur = () => this.GameMode === "Friend" && this.togglePause()
 
     private moveFriend(prevCoor: [number, number][], newCoor: [number, number][], color: typeof COLORS[number]) {
         this.updateFriendArea(prevCoor, DEFAULT_COLOR)
