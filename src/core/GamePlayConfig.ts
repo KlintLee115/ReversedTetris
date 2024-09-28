@@ -7,15 +7,15 @@ export type GameModeType = "Friend" | "Solo"
 const LOCAL_ROWS_DISPLAYABLE = Math.floor(ROWS_DISPLAYABLE * 0.9)
 
 export class Game extends Tetris {
-    private friendArea: HTMLElement | null = null
     private isPaused = false
-    private hasWon = false
-
     private GameMode: GameModeType
-    private pauseScreen: HTMLElement
     private continueButton: HTMLElement
-    private waitingForFriendStatus: HTMLElement
-    private waitingForFriendCountdown: HTMLElement
+
+    public waitingForFriendStatus: HTMLElement
+    public waitingForFriendCountdown: HTMLElement
+    public friendArea: HTMLElement | null = null
+    public pauseScreen: HTMLElement
+    public hasWon = false
 
     constructor(mainArea: HTMLElement, pauseScreen: HTMLElement, continueButton: HTMLElement, waitingForFriendStatus: HTMLElement, waitingForFriendCountdown: HTMLElement) {
         super(mainArea, 500, LOCAL_ROWS_DISPLAYABLE, true)
@@ -43,13 +43,15 @@ export class Game extends Tetris {
 
             (async () => {
 
-                const { startSignalRConnection, joinRoom } = await import("../utils/signalR.ts")
+                const { startSignalRConnection }= await import("../utils/signalR.ts")
+                const {joinRoom } = await import('../utils/signalRSenders.ts')
+                const {shouldMultiGameStart, setupSignalREventListeners } = await import('../utils/signalRListener.ts')
 
                 await startSignalRConnection()
                 joinRoom(gameId as string)
 
                 shouldMultiGameStart().then(() => {
-                    this.setupSignalREventListeners()
+                    setupSignalREventListeners(this)
                     this.setupPlayingArea()
 
                     this.waitingForFriendStatus.style.display = "none"
@@ -64,26 +66,28 @@ export class Game extends Tetris {
 
             this.togglePause()
 
-            const { notifyPause } = await import("../utils/signalR.ts")
+            const { notifyPause } = await import("../utils/signalRSenders.ts")
 
             notifyPause()
         }
+    }
+
+    private createPlayingPanel() {
+        const panel = document.createElement('div')
+        panel.style.border = "3px solid white"
+        panel.style.padding = "4px"
+        this.addRowsForSetup(panel)
+        this.mainArea.appendChild(panel)
+        return panel
     }
 
     override setupPlayingArea() {
 
         for (let i = 0; i < (this.GameMode === "Friend" ? 2 : 1); i++) {
 
-            const panel = document.createElement('div')
-            panel.style.border = "3px solid white"
-            panel.style.padding = "4px"
-
+            const panel = this.createPlayingPanel()
             if (i === 0) this.playingArea = panel
             else this.friendArea = panel
-
-            this.addRowsForSetup(panel)
-
-            this.mainArea.appendChild(panel)
         }
 
         window.addEventListener('keydown', event => this.inGameListener(event))
@@ -95,14 +99,14 @@ export class Game extends Tetris {
                 this.pauseScreen.style.display = "none"
                 this.mainArea.style.display = "none"
 
-                const { requestContinue } = await import("../utils/signalR.ts")
+                const { requestContinue } = await import("../utils/signalRSenders.ts")
 
                 requestContinue()
             })
         }
     }
 
-    private togglePause() {
+    public togglePause() {
 
         clearInterval(this.currInterval)
 
@@ -116,7 +120,7 @@ export class Game extends Tetris {
 
     }
 
-    private toggleContinue() {
+    public toggleContinue() {
 
         this.isPaused = false
         this.waitingForFriendStatus.style.display = "none"
@@ -149,7 +153,7 @@ export class Game extends Tetris {
         }
     }
 
-    private moveFriend(prevCoor: [number, number][], newCoor: [number, number][], color: typeof COLORS[number]) {
+    public moveFriend(prevCoor: [number, number][], newCoor: [number, number][], color: typeof COLORS[number]) {
         this.updateFriendArea(prevCoor, DEFAULT_COLOR)
         this.updateFriendArea(newCoor, color)
     }
@@ -157,75 +161,5 @@ export class Game extends Tetris {
     private updateFriendArea(coors: [number, number][], color: string) {
         coors.forEach(coor => colorBlock(coor[0], coor[1], color, this.friendArea as HTMLElement))
     }
-
-    // SignalR
-
-    private async setupSignalREventListeners() {
-
-        type MovementType = {
-            prevCoor: [number, number][],
-            newCoor: [number, number][],
-            color: typeof COLORS[number],
-        }
-
-        const { connection } = await import("../utils/signalR.ts")
-
-        connection.on("ReceiveMovement", (data: MovementType) => {
-
-            const { prevCoor, newCoor, color } = data
-
-            this.moveFriend(prevCoor, newCoor, color)
-        })
-
-        connection.on("LeaveGame", () => {
-            alert('Your friend has left the game. Continue to go to home screen')
-            window.location.href = "/"
-        })
-
-        connection.on("ClearRows", () => {
-            this.clearRows(this.friendArea as HTMLElement, false)
-        })
-
-        connection.on("You Won", () => {
-            this.hasWon = true
-            clearInterval(this.currInterval)
-            alert("You Won!")
-            this.pauseScreen.style.display = "none"
-            this.mainArea.style.display = "flex"
-        })
-        connection.on("Pause", () => this.togglePause())
-        connection.on("Continue", () => {
-
-            console.log('received')
-
-            this.waitingForFriendStatus.style.display = "none"
-            this.waitingForFriendCountdown.style.display = "block"
-
-            let remainingSeconds = 3
-
-            let interval = setInterval(() => {
-
-                if (remainingSeconds > 0) {
-                    this.waitingForFriendCountdown.innerHTML = remainingSeconds.toString()
-                    remainingSeconds--
-                }
-                else {
-                    this.waitingForFriendCountdown.innerHTML = ""
-                    this.waitingForFriendCountdown.style.display = "none"
-                    clearInterval(interval)
-                    this.toggleContinue()
-                }
-            }, 1000)
-        })
-    }
-}
-
-// Utility Functions
-
-function shouldMultiGameStart(): Promise<void> {
-    return new Promise(async (resolve, _) => {
-        const { connection } = await import("../utils/signalR.ts")
-
-        connection.on('UpdateGroupCount', (cnt: number) => cnt === 2 && resolve())
-    })
+    
 }

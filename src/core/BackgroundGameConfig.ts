@@ -1,8 +1,5 @@
 import { Tetris } from "../core/Tetris.js"
-import { I, O, J, T, L, S, Z } from "../TetrisPieces.js"
 import { ROWS_DISPLAYABLE } from "../utils/consts.js"
-
-export const TETRIS_PIECES = [I, O, J, T, L, S, Z]
 
 export class HomeBackgroundConfig extends Tetris {
 

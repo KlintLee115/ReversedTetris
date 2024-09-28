@@ -8,13 +8,15 @@ export abstract class Tetris {
 
     public playingArea: HTMLElement
     public currPiece: TetrisPiece
-    protected currPieceID: number
-    protected currInterval: ReturnType<typeof setInterval>
-    protected hasLost = false
     public landingCoors: [number, number][] = []
-    protected mainArea: HTMLElement
-    private intervalBaseTime: number
     public rowsDisplayable: number
+    public currInterval: ReturnType<typeof setInterval>
+    public mainArea: HTMLElement
+
+    protected currPieceID: number
+    protected hasLost = false
+
+    private intervalBaseTime: number
     private IsGame: boolean
 
     constructor(mainArea: HTMLElement, intervalBaseTime: number, rowsDisplayable: number, isGame: boolean) {
@@ -98,7 +100,7 @@ export abstract class Tetris {
     therefore, 1->0, 3->1, 6->2, correct
     */
 
-    protected async clearRows(areaToClear: HTMLElement, shouldNotifyFriend: boolean) {
+    public async clearRows(areaToClear: HTMLElement, shouldNotifyFriend: boolean) {
 
         const completedRows = this.getCompletedRows(areaToClear)
 
@@ -122,7 +124,7 @@ export abstract class Tetris {
 
         if (shouldNotifyFriend) {
 
-            const { notifyClearRows } = await import("../utils/signalR.ts")
+            const { notifyClearRows } = await import("../utils/signalRSenders.ts")
             notifyClearRows(completedRows)
         }
     }
@@ -137,7 +139,7 @@ export abstract class Tetris {
                 clearInterval(this.currInterval)
 
                 if (shouldNotifyFriend) {
-                    const { notifyGameOver } = await import("../utils/signalR.ts")
+                    const { notifyGameOver } = await import("../utils/signalRSenders.ts")
 
                     await notifyGameOver()
                 }

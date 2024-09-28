@@ -1,7 +1,6 @@
 import { Tetris } from "./core/Tetris";
 import { colorArea, makeLandingCoors, removeLandingCoors, uncolorCoors } from "./utils/colors";
 import { HIDDEN_ROWS, ROWS_DISPLAYABLE, COLORS, DEFAULT_COLOR } from "./utils/consts";
-import { notifyMovement } from "./utils/signalR";
 
 const COOR = {
     Row: 0,
@@ -57,7 +56,7 @@ export abstract class TetrisPiece {
         });
     }
 
-    rotate(shouldNotifyFriend: boolean) {
+    async rotate(shouldNotifyFriend: boolean) {
 
         const newOrientationIdx = this.orientationIDX === this.getOrientations().length - 1 ? 0 : this.orientationIDX + 1;
         const oldCoor = this.coor
@@ -71,8 +70,11 @@ export abstract class TetrisPiece {
             this.coor = newCoor;
             colorArea(this, this.color, this.playingArea)
 
-            if (shouldNotifyFriend) notifyMovement(oldCoor, this.coor, this.color)
+            if (shouldNotifyFriend) {
 
+                const {notifyMovement} = await import('./utils/signalRSenders')
+                notifyMovement(oldCoor, this.coor, this.color)
+            }
             removeLandingCoors(this.Game)
             makeLandingCoors(this.Game)
         }
@@ -93,7 +95,7 @@ export abstract class TetrisPiece {
 
     canMoveUp = () => this.canMove(this.coor.map(([row, col]) => [row - 1, col] as [number, number]));
 
-    shiftCoor(rowOrCol: number, magnitude: number, shouldNotifyFriend: boolean) {
+    async shiftCoor(rowOrCol: number, magnitude: number, shouldNotifyFriend: boolean) {
 
         uncolorCoors(this.coor, this.playingArea)
 
@@ -104,8 +106,11 @@ export abstract class TetrisPiece {
 
         colorArea(this, this.color, this.playingArea)
 
-        if (shouldNotifyFriend) notifyMovement(oldCoor, this.coor, this.color)
-
+        if (shouldNotifyFriend) {
+            const {notifyMovement} = await import('./utils/signalRSenders')
+            
+            notifyMovement(oldCoor, this.coor, this.color)
+        }
         // reset landing coors only if action is not move up
         if (!(rowOrCol === 0 && magnitude === -1)) {
             removeLandingCoors(this.Game)
