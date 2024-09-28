@@ -29,10 +29,6 @@ export abstract class Tetris {
         this.rowsDisplayable = rowsDisplayable
     }
 
-    public setLandingCoors(_landingCoors: [number, number][]) {
-        this.landingCoors = _landingCoors
-    }
-
     public getLandingCoors(pieceId: number, currPieceCoors: [number, number][]): [number, number][] {
         let updatedCoors = currPieceCoors
         while (true) {
@@ -43,17 +39,17 @@ export abstract class Tetris {
         }
     }
 
-    protected startNextRound(shouldNotifyFriend: boolean) {
+    protected async startNextRound(shouldNotifyFriend: boolean) {
 
         this.currPieceID += 1
         this.currPiece = this.newPiece()
 
-        this.movePieceIntoPlayingArea(shouldNotifyFriend)
+        const isSuccess = await this.movePieceIntoPlayingArea(shouldNotifyFriend)
 
-        if (!this.hasLost) {
-            this.startIntervals(false, shouldNotifyFriend)
-            makeLandingCoors(this)
-        }
+        if (!isSuccess) return
+
+        this.startIntervals(shouldNotifyFriend)
+        makeLandingCoors(this)
     }
 
     protected getCompletedRows(areaToCheck: HTMLElement) {
@@ -67,11 +63,9 @@ export abstract class Tetris {
         return completeRows
     }
 
-    protected startIntervals(isPaused: boolean, shouldNotifyFriend: boolean) {
+    protected startIntervals(shouldNotifyFriend: boolean) {
 
         this.currInterval = setInterval(async () => {
-
-            if (isPaused) return
 
             if (this.currPiece.hasHitTop()) {
 
@@ -134,7 +128,7 @@ export abstract class Tetris {
     }
 
 
-    private async movePieceIntoPlayingArea(shouldNotifyFriend: boolean) {
+    private async movePieceIntoPlayingArea(shouldNotifyFriend: boolean) : Promise<boolean> {
 
         while (this.currPiece.coor.some(coor => coor[0] > this.rowsDisplayable)) {
 
@@ -150,12 +144,13 @@ export abstract class Tetris {
 
                 if (this.IsGame) alert("Game Over")
 
-                break
+                return false
             }
             else this.currPiece.moveUp(shouldNotifyFriend)
         }
 
         colorArea(this.currPiece, this.currPiece.color, this.playingArea)
+        return true
     }
 
     protected addRowsForSetup(panel: HTMLElement) {

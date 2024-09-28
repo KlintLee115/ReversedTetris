@@ -61,10 +61,6 @@ export class Game extends Tetris {
         }
 
         // window.onblur = () => this.onWindowBlur()
-
-        this.continueButton.addEventListener('click', () => {
-            this.toggleContinue()
-        })
     }
 
     override setupPlayingArea() {
@@ -110,15 +106,15 @@ export class Game extends Tetris {
         }
     }
 
-    private togglePause(isThisInitiatizePause = false) {
+    private togglePause() {
 
         clearInterval(this.currInterval)
 
         if (this.hasWon || this.hasLost) return
 
-        this.pauseScreen.style.display = isThisInitiatizePause ? "block" : "none"
-        this.waitingForFriendStatus.style.display = isThisInitiatizePause ? "none" : "block"
-        this.mainArea.style.filter = isThisInitiatizePause ? "blur(10px)" : ""
+        this.pauseScreen.style.display = "block"
+        this.waitingForFriendStatus.style.display = "none"
+        this.mainArea.style.filter = "blur(10px)"
 
         this.isPaused = true
 
@@ -132,7 +128,7 @@ export class Game extends Tetris {
         this.mainArea.style.display = "flex"
         this.pauseScreen.style.display = "none"
 
-        this.startIntervals(this.isPaused, this.GameMode === "Friend")
+        this.startIntervals(this.GameMode === "Friend")
 
     }
 
@@ -146,7 +142,14 @@ export class Game extends Tetris {
             ArrowLeft: () => this.currPiece.canMoveLeft() && this.currPiece.moveLeft(shouldNotifyFriend),
             ArrowRight: () => this.currPiece.canMoveRight() && this.currPiece.moveRight(shouldNotifyFriend),
             ArrowDown: () => this.currPiece.rotate(shouldNotifyFriend),
-            ArrowUp: () => this.currPiece.canMoveUp() && this.currPiece.moveUp(shouldNotifyFriend)
+            ArrowUp: () => this.currPiece.canMoveUp() && this.currPiece.moveUp(shouldNotifyFriend),
+            Enter: async () => {
+                this.togglePause()
+
+                const { notifyPause } = await import("../utils/signalR.ts")
+
+                notifyPause()
+            }
         }
 
         actions[listener.code]?.()
@@ -157,7 +160,7 @@ export class Game extends Tetris {
         }
     }
 
-    private onWindowBlur = () => this.GameMode === "Friend" && this.togglePause()
+    // private onWindowBlur = () => this.GameMode === "Friend" && this.togglePause()
 
     private moveFriend(prevCoor: [number, number][], newCoor: [number, number][], color: typeof COLORS[number]) {
         this.updateFriendArea(prevCoor, DEFAULT_COLOR)
@@ -203,8 +206,10 @@ export class Game extends Tetris {
             this.pauseScreen.style.display = "none"
             this.mainArea.style.display = "flex"
         })
-        connection.on("Pause", this.togglePause)
+        connection.on("Pause", () => this.togglePause())
         connection.on("Continue", () => {
+
+            console.log('received')
 
             this.waitingForFriendStatus.style.display = "none"
             this.waitingForFriendCountdown.style.display = "block"

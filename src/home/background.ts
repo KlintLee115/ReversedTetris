@@ -9,10 +9,8 @@ background.style.alignItems = "start"
 background.style.overflow = "hidden"
 
 for (let i = 0; i < BACKGROUND_PANELS; i++) {
-    for (let i = 0; i < 1; i++) {
-        const section = document.createElement('section')
-        new HomeBackgroundConfig(section)
+    const section = document.createElement('section')
+    new HomeBackgroundConfig(section)
 
-        background.appendChild(section)
-    }
+    background.appendChild(section)
 }

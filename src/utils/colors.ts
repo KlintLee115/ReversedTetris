@@ -34,7 +34,7 @@ export function removeLandingCoors(game: Tetris) {
 
 export function makeLandingCoors(game: Tetris) {
 
-    game.setLandingCoors(game.getLandingCoors(game.currPiece.getId(), game.currPiece.coor))
+    game.landingCoors = game.getLandingCoors(game.currPiece.getId(), game.currPiece.coor)
     const color = game.currPiece.color
 
     game.landingCoors.forEach(coor => {
