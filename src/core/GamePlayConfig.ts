@@ -43,9 +43,9 @@ export class Game extends Tetris {
 
             (async () => {
 
-                const { startSignalRConnection }= await import("../utils/signalR.ts")
-                const {joinRoom } = await import('../utils/signalRSenders.ts')
-                const {shouldMultiGameStart, setupSignalREventListeners } = await import('../utils/signalRListener.ts')
+                const { startSignalRConnection } = await import("../utils/signalR.ts")
+                const { joinRoom } = await import('../utils/signalRSenders.ts')
+                const { shouldMultiGameStart, setupSignalREventListeners } = await import('../utils/signalRListener.ts')
 
                 await startSignalRConnection()
                 joinRoom(gameId as string)
@@ -63,6 +63,8 @@ export class Game extends Tetris {
         }
 
         window.onblur = async () => {
+
+            if (this.GameMode === "Solo") return
 
             this.togglePause()
 
@@ -138,7 +140,11 @@ export class Game extends Tetris {
         const shouldNotifyFriend = this.GameMode === "Friend"
 
         const actions: { [key: string]: () => void } = {
-            Space: () => this.currPiece.upAllTheWay(shouldNotifyFriend),
+            Space: () => {
+                this.currPiece.upAllTheWay(shouldNotifyFriend)
+                this.clearRound(shouldNotifyFriend)
+                this.startNextRound(shouldNotifyFriend)
+            },
             ArrowLeft: () => this.currPiece.canMoveLeft() && this.currPiece.moveLeft(shouldNotifyFriend),
             ArrowRight: () => this.currPiece.canMoveRight() && this.currPiece.moveRight(shouldNotifyFriend),
             ArrowDown: () => this.currPiece.rotate(shouldNotifyFriend),
@@ -146,11 +152,6 @@ export class Game extends Tetris {
         }
 
         actions[listener.code]?.()
-
-        if (listener.code === "Space") {
-            this.clearRound(shouldNotifyFriend)
-            this.startNextRound(shouldNotifyFriend)
-        }
     }
 
     public moveFriend(prevCoor: [number, number][], newCoor: [number, number][], color: typeof COLORS[number]) {
@@ -161,5 +162,5 @@ export class Game extends Tetris {
     private updateFriendArea(coors: [number, number][], color: string) {
         coors.forEach(coor => colorBlock(coor[0], coor[1], color, this.friendArea as HTMLElement))
     }
-    
+
 }
