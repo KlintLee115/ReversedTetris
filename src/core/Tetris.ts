@@ -1,5 +1,5 @@
 import { I, J, L, O, S, T, TetrisPiece, Z } from "../TetrisPieces.ts";
-import { colorPlayingArea, makeLandingCoors, uncolorCoors } from "../utils/colors.ts";
+import { colorPlayingArea, makeLandingCoors } from "../utils/colors.ts";
 import { BORDER_DEFAULT_COLOR, COLUMNS, DEFAULT_COLOR, HIDDEN_ROWS } from "../utils/consts.ts";
 
 const TETRIS_PIECES = [I, O, J, T, L, S, Z]
@@ -14,7 +14,7 @@ export abstract class Tetris {
     public landingCoors: [number, number][] = []
     protected mainArea: HTMLElement
     private intervalBaseTime: number
-    private rowsDisplayable: number
+    public rowsDisplayable: number
     private IsGame: boolean
 
     constructor(mainArea: HTMLElement, intervalBaseTime: number, rowsDisplayable: number, isGame: boolean) {
@@ -74,17 +74,14 @@ export abstract class Tetris {
 
             if (isPaused) return
 
-            if (this.currPiece.hitTop()) {
+            if (this.currPiece.hasHitTop()) {
 
                 this.clearRows(this.playingArea, shouldNotifyFriend)
                 this.startNextRound(shouldNotifyFriend)
             }
 
             else {
-                uncolorCoors(this.currPiece.coor, this.playingArea)
                 this.currPiece.moveUp(shouldNotifyFriend)
-
-                colorPlayingArea(this.currPiece, this.currPiece.color, this.playingArea)
             }
 
         }, this.intervalBaseTime - (20 * (Math.floor(this.currPieceID / 5))))
@@ -137,7 +134,7 @@ export abstract class Tetris {
 
         while (this.currPiece.coor.some(coor => coor[0] > this.rowsDisplayable)) {
 
-            if (this.currPiece.hitTop()) {
+            if (this.currPiece.hasHitTop()) {
                 this.hasLost = true
                 clearInterval(this.currInterval)
 
@@ -158,7 +155,10 @@ export abstract class Tetris {
     }
 
     protected addRowsForSetup(panel: HTMLElement) {
-        for (let row = 0; row < this.rowsDisplayable + HIDDEN_ROWS; row++) {
+
+        console.log(this.rowsDisplayable)
+        console.log(HIDDEN_ROWS)
+        for (let row = 0; row <= this.rowsDisplayable + HIDDEN_ROWS; row++) {
             const rowOfBoxes = document.createElement('div')
             rowOfBoxes.style.display = "flex"
             rowOfBoxes.style.justifyContent = "center"

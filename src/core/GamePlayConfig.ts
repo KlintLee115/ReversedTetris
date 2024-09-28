@@ -1,5 +1,4 @@
 import { Tetris } from './Tetris.ts'
-import { uncolorCoors, colorPlayingArea } from '../utils/colors.js'
 import { COLORS, DEFAULT_COLOR, ROWS_DISPLAYABLE } from '../utils/consts.js'
 
 export type GameModeType = "Friend" | "Solo"
@@ -139,7 +138,6 @@ export class Game extends Tetris {
     private inGameListener(listener: KeyboardEvent) {
         if (this.isPaused) return
 
-        const oldCoors = this.currPiece.coor
         const shouldNotifyFriend = this.GameMode === "Friend"
 
         const actions: { [key: string]: () => void } = {
@@ -151,9 +149,6 @@ export class Game extends Tetris {
         }
 
         actions[listener.code]?.()
-
-        uncolorCoors(oldCoors, this.playingArea)
-        colorPlayingArea(this.currPiece, this.currPiece.color, this.playingArea)
 
         if (listener.code === "Space") {
             this.clearRows(this.playingArea, shouldNotifyFriend)
@@ -186,8 +181,6 @@ export class Game extends Tetris {
         connection.on("ReceiveMovement", (data: MovementType) => {
 
             const { prevCoor, newCoor, color } = data
-
-            console.log('amazing')
 
             this.moveFriend(prevCoor, newCoor, color)
         })

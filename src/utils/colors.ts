@@ -3,9 +3,10 @@ import { TetrisPiece } from "../TetrisPieces";
 import { BORDER_DEFAULT_COLOR, DEFAULT_COLOR } from "./consts"
 import { Tetris } from "../core/Tetris";
 
-export function colorBlock(row: number, col: number, color: string, playingArea: HTMLElement) {
+export function colorBlock(rowNumber: number, colNumber: number, color: string, playingArea: HTMLElement) {
 
-    const box = playingArea.children!.item(row)!.children.item(col) as HTMLElement;
+    const row = playingArea.children.item(rowNumber) as HTMLElement
+    const box = row.children.item(colNumber) as HTMLElement;
     box.style.backgroundColor = color === DEFAULT_COLOR ? DEFAULT_COLOR : darken(0.05, color)
 
     box.style.borderColor = color === DEFAULT_COLOR ? BORDER_DEFAULT_COLOR : lighten(0.1, color)
