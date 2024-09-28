@@ -5,6 +5,7 @@ import { Tetris } from "../core/Tetris";
 
 export function colorBlock(rowNumber: number, colNumber: number, color: string, playingArea: HTMLElement) {
 
+
     const row = playingArea.children.item(rowNumber) as HTMLElement
     const box = row.children.item(colNumber) as HTMLElement;
     box.style.backgroundColor = color === DEFAULT_COLOR ? DEFAULT_COLOR : darken(0.05, color)
@@ -12,14 +13,14 @@ export function colorBlock(rowNumber: number, colNumber: number, color: string, 
     box.style.borderColor = color === DEFAULT_COLOR ? BORDER_DEFAULT_COLOR : lighten(0.1, color)
 }
 
-export function colorPlayingArea(pieceForCoor: TetrisPiece, color: string, playingArea: HTMLElement) {
+export function colorArea(pieceForCoor: TetrisPiece, color: string, area: HTMLElement) {
     pieceForCoor.coor.forEach(element => {
 
         let rowCoor = element[0]
         let colCoor = element[1]
 
-        colorBlock(rowCoor, colCoor, color, playingArea);
-        (playingArea.children[rowCoor].children[colCoor] as HTMLElement).id = pieceForCoor.getId().toString()
+        colorBlock(rowCoor, colCoor, color, area);
+        (area.children[rowCoor].children[colCoor] as HTMLElement).id = pieceForCoor.getId().toString()
     })
 }
 

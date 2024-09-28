@@ -1,5 +1,6 @@
 import { Tetris } from './Tetris.ts'
 import { COLORS, DEFAULT_COLOR, ROWS_DISPLAYABLE } from '../utils/consts.js'
+import { colorBlock } from '../utils/colors.ts'
 
 export type GameModeType = "Friend" | "Solo"
 
@@ -131,7 +132,7 @@ export class Game extends Tetris {
         this.mainArea.style.display = "flex"
         this.pauseScreen.style.display = "none"
 
-        this.startInterval(this.isPaused, this.GameMode === "Friend")
+        this.startIntervals(this.isPaused, this.GameMode === "Friend")
 
     }
 
@@ -151,19 +152,20 @@ export class Game extends Tetris {
         actions[listener.code]?.()
 
         if (listener.code === "Space") {
-            this.clearRows(this.playingArea, shouldNotifyFriend)
+            this.clearRound(shouldNotifyFriend)
+            this.startNextRound(shouldNotifyFriend)
         }
     }
 
     private onWindowBlur = () => this.GameMode === "Friend" && this.togglePause()
 
     private moveFriend(prevCoor: [number, number][], newCoor: [number, number][], color: typeof COLORS[number]) {
-        this.updateArea(prevCoor, DEFAULT_COLOR, this.friendArea as HTMLElement)
-        this.updateArea(newCoor, color, this.friendArea as HTMLElement)
+        this.updateFriendArea(prevCoor, DEFAULT_COLOR)
+        this.updateFriendArea(newCoor, color)
     }
 
-    private updateArea(coors: [number, number][], color: string, area: HTMLElement) {
-        coors.forEach(coor => (area.children.item(coor[0])?.children.item(coor[1]) as HTMLElement).style.backgroundColor = color)
+    private updateFriendArea(coors: [number, number][], color: string) {
+        coors.forEach(coor => colorBlock(coor[0], coor[1], color, this.friendArea as HTMLElement))
     }
 
     // SignalR

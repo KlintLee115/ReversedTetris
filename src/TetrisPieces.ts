@@ -1,5 +1,5 @@
 import { Tetris } from "./core/Tetris";
-import { colorPlayingArea, makeLandingCoors, removeLandingCoors, uncolorCoors } from "./utils/colors";
+import { colorArea, makeLandingCoors, removeLandingCoors, uncolorCoors } from "./utils/colors";
 import { HIDDEN_ROWS, ROWS_DISPLAYABLE, COLORS, DEFAULT_COLOR } from "./utils/consts";
 import { notifyMovement } from "./utils/signalR";
 
@@ -69,7 +69,7 @@ export abstract class TetrisPiece {
 
             this.orientationIDX = newOrientationIdx;
             this.coor = newCoor;
-            colorPlayingArea(this, this.color, this.playingArea)
+            colorArea(this, this.color, this.playingArea)
 
             if (shouldNotifyFriend) notifyMovement(oldCoor, this.coor, this.color)
 
@@ -102,7 +102,7 @@ export abstract class TetrisPiece {
         this.centerCoor[rowOrCol === COOR.Row ? COOR.Row : COOR.Col] += magnitude;
         this.coor = this.getOrientations()[this.orientationIDX]
 
-        colorPlayingArea(this, this.color, this.playingArea)
+        colorArea(this, this.color, this.playingArea)
 
         if (shouldNotifyFriend) notifyMovement(oldCoor, this.coor, this.color)
 

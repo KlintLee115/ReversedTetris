@@ -1,5 +1,5 @@
 import { I, J, L, O, S, T, TetrisPiece, Z } from "../TetrisPieces.ts";
-import { colorPlayingArea, makeLandingCoors } from "../utils/colors.ts";
+import { colorArea, makeLandingCoors } from "../utils/colors.ts";
 import { BORDER_DEFAULT_COLOR, COLUMNS, DEFAULT_COLOR, HIDDEN_ROWS } from "../utils/consts.ts";
 
 const TETRIS_PIECES = [I, O, J, T, L, S, Z]
@@ -45,14 +45,13 @@ export abstract class Tetris {
 
     protected startNextRound(shouldNotifyFriend: boolean) {
 
-        clearInterval(this.currInterval)
         this.currPieceID += 1
         this.currPiece = this.newPiece()
 
         this.movePieceIntoPlayingArea(shouldNotifyFriend)
 
         if (!this.hasLost) {
-            this.startInterval(false, shouldNotifyFriend)
+            this.startIntervals(false, shouldNotifyFriend)
             makeLandingCoors(this)
         }
     }
@@ -68,7 +67,7 @@ export abstract class Tetris {
         return completeRows
     }
 
-    protected startInterval(isPaused: boolean, shouldNotifyFriend: boolean) {
+    protected startIntervals(isPaused: boolean, shouldNotifyFriend: boolean) {
 
         this.currInterval = setInterval(async () => {
 
@@ -76,15 +75,20 @@ export abstract class Tetris {
 
             if (this.currPiece.hasHitTop()) {
 
+                clearInterval(this.currInterval)
                 this.clearRows(this.playingArea, shouldNotifyFriend)
                 this.startNextRound(shouldNotifyFriend)
+                return
             }
 
-            else {
-                this.currPiece.moveUp(shouldNotifyFriend)
-            }
+            this.currPiece.moveUp(shouldNotifyFriend)
 
         }, this.intervalBaseTime - (20 * (Math.floor(this.currPieceID / 5))))
+    }
+
+    protected clearRound(shouldNotifyFriend: boolean) {
+        clearInterval(this.currInterval)
+        this.clearRows(this.playingArea, shouldNotifyFriend)
     }
 
     // check for completed rows, clear them and move up
@@ -151,13 +155,11 @@ export abstract class Tetris {
             else this.currPiece.moveUp(shouldNotifyFriend)
         }
 
-        colorPlayingArea(this.currPiece, this.currPiece.color, this.playingArea)
+        colorArea(this.currPiece, this.currPiece.color, this.playingArea)
     }
 
     protected addRowsForSetup(panel: HTMLElement) {
 
-        console.log(this.rowsDisplayable)
-        console.log(HIDDEN_ROWS)
         for (let row = 0; row <= this.rowsDisplayable + HIDDEN_ROWS; row++) {
             const rowOfBoxes = document.createElement('div')
             rowOfBoxes.style.display = "flex"
