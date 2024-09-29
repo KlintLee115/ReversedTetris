@@ -1,6 +1,6 @@
 import { Tetris } from "./core/Tetris";
 import { colorArea, makeLandingCoors, removeLandingCoors, uncolorCoors } from "./utils/colors";
-import { HIDDEN_ROWS, ROWS_DISPLAYABLE, COLORS, DEFAULT_COLOR } from "./utils/consts";
+import { HIDDEN_ROWS, ROWS_DISPLAYABLE, COLORS, DEFAULT_COLOR, COLUMNS } from "./utils/consts";
 
 const COOR = {
     Row: 0,
@@ -52,32 +52,47 @@ export abstract class TetrisPiece {
         return newCoor.every(([row, col]) => {
             const rowElement = this.playingArea.children.item(row) as HTMLElement
             const colElement = rowElement?.children.item(col) as HTMLElement
-            return colElement && (colElement.style.backgroundColor === DEFAULT_COLOR || parseInt(colElement.id) === this.id)
+            return colElement && (col < COLUMNS) && (colElement.style.backgroundColor === DEFAULT_COLOR || parseInt(colElement.id) === this.id)
         });
     }
 
     async rotate(shouldNotifyFriend: boolean) {
 
         const newOrientationIdx = this.orientationIDX === this.getOrientations().length - 1 ? 0 : this.orientationIDX + 1;
-        const oldCoor = this.coor
 
         const newCoor = this.getOrientations()[newOrientationIdx];
 
-        if (this.canMove(newCoor)) {
-            uncolorCoors(oldCoor, this.playingArea)
-
-            this.orientationIDX = newOrientationIdx;
-            this.coor = newCoor;
-            colorArea(this, this.color, this.playingArea)
-
-            if (shouldNotifyFriend) {
-
-                const {notifyMovement} = await import('./utils/signalRSenders')
-                notifyMovement(oldCoor, this.coor, this.color)
-            }
-            removeLandingCoors(this.Game)
-            makeLandingCoors(this.Game)
+        for (let moveUnit = 0; moveUnit < 4; moveUnit++) {
+            const leftMove = newCoor.map(([row, col]) => [row, col - moveUnit] as [number, number]);
+            const rightMove = newCoor.map(([row, col]) => [row, col + moveUnit] as [number, number]);
+    
+            if (this.canMove(leftMove)) return this.applyRotation(-moveUnit, leftMove, newOrientationIdx, shouldNotifyFriend);
+            if (this.canMove(rightMove)) return this.applyRotation(moveUnit, rightMove, newOrientationIdx, shouldNotifyFriend);
         }
+    }
+
+    private async applyRotation(moveUnit: number, newCoor: [number, number][], newOrientationIdx: number, shouldNotifyFriend: boolean) {
+        
+        for (let i = 0; i < Math.abs(moveUnit); i++) {
+            if (moveUnit < 0) this.moveLeft(shouldNotifyFriend)
+            else this.moveRight(shouldNotifyFriend)
+        }
+
+        const oldCoor = this.coor
+
+        uncolorCoors(this.coor, this.playingArea)
+    
+        this.orientationIDX = newOrientationIdx;
+        this.coor = newCoor;
+        colorArea(this, this.color, this.playingArea);
+    
+        if (shouldNotifyFriend) {
+            const { notifyMovement } = await import('./utils/signalRSenders');
+            notifyMovement(oldCoor, this.coor, this.color);
+        }
+    
+        removeLandingCoors(this.Game);
+        makeLandingCoors(this.Game);
     }
 
     hasHitTop() {

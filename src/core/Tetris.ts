@@ -1,4 +1,4 @@
-import { I, J, L, O, S, T, TetrisPiece, Z } from "../TetrisPieces.ts";
+import { I, J, L, O, S, T, TetrisPiece, Z } from "../TetrisPiece.ts";
 import { colorArea, makeLandingCoors } from "../utils/colors.ts";
 import { BORDER_DEFAULT_COLOR, COLUMNS, DEFAULT_COLOR, HIDDEN_ROWS } from "../utils/consts.ts";
 

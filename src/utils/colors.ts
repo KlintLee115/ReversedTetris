@@ -1,5 +1,5 @@
 import { darken, lighten } from "polished";
-import { TetrisPiece } from "../TetrisPieces";
+import { TetrisPiece } from "../TetrisPiece";
 import { BORDER_DEFAULT_COLOR, DEFAULT_COLOR } from "./consts"
 import { Tetris } from "../core/Tetris";
 
