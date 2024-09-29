@@ -12,7 +12,6 @@ export function startSignalRConnection(): Promise<void> {
 
         connection.start()
             .then(() => {
-                console.log("SignalR connection established.")
                 resolve()
             })
             .catch(err => {

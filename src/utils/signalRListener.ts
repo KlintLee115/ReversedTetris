@@ -34,8 +34,6 @@ export async function setupSignalREventListeners(game: Game) {
     connection.on("Pause", () => game.togglePause())
     connection.on("Continue", () => {
 
-        console.log('received')
-
         game.waitingForFriendStatus.style.display = "none"
         game.waitingForFriendCountdown.style.display = "block"
 

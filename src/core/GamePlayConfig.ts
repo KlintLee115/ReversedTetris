@@ -10,6 +10,7 @@ export class Game extends Tetris {
     private isPaused = false
     private GameMode: GameModeType
     private continueButton: HTMLElement
+    private keyPressInterval: ReturnType<typeof setInterval>
 
     public waitingForFriendStatus: HTMLElement
     public waitingForFriendCountdown: HTMLElement
@@ -24,6 +25,7 @@ export class Game extends Tetris {
         this.continueButton = continueButton
         this.waitingForFriendStatus = waitingForFriendStatus
         this.waitingForFriendCountdown = waitingForFriendCountdown
+        this.keyPressInterval = NaN
 
         const urlParams = new URLSearchParams(window.location.search)
         const gameId = urlParams.get('id')
@@ -93,6 +95,12 @@ export class Game extends Tetris {
         }
 
         window.addEventListener('keydown', event => this.inGameListener(event))
+        window.addEventListener('keyup', () => {
+            if (!isNaN(this.keyPressInterval)) {
+                clearInterval(this.keyPressInterval)
+                this.keyPressInterval = NaN
+            }
+        })
 
         if (this.GameMode === "Friend") {
 
@@ -135,16 +143,18 @@ export class Game extends Tetris {
     }
 
     private inGameListener(listener: KeyboardEvent) {
-        if (this.isPaused) return
 
         const shouldNotifyFriend = this.GameMode === "Friend"
 
+        if (listener.code === 'Space') {
+            this.currPiece.upAllTheWay(shouldNotifyFriend);
+            this.clearRound(shouldNotifyFriend);
+            this.startNextRound(shouldNotifyFriend);
+
+            return
+        }
+
         const actions: { [key: string]: () => void } = {
-            Space: () => {
-                this.currPiece.upAllTheWay(shouldNotifyFriend)
-                this.clearRound(shouldNotifyFriend)
-                this.startNextRound(shouldNotifyFriend)
-            },
             ArrowLeft: () => this.currPiece.canMoveLeft() && this.currPiece.moveLeft(shouldNotifyFriend),
             ArrowRight: () => this.currPiece.canMoveRight() && this.currPiece.moveRight(shouldNotifyFriend),
             ArrowDown: () => this.currPiece.rotate(shouldNotifyFriend),
@@ -152,6 +162,23 @@ export class Game extends Tetris {
         }
 
         actions[listener.code]?.()
+
+        if (this.isPaused || !isNaN(this.keyPressInterval)) return
+
+        let intervalTime: number;
+
+        if (listener.code === 'ArrowLeft' || listener.code === 'ArrowRight') {
+            intervalTime = 75
+        } else if (listener.code === 'ArrowUp') {
+            intervalTime = 600
+        } else {
+            return;  // If the key doesn't match, exit early
+        }
+
+        this.keyPressInterval = setTimeout(() => {
+            this.keyPressInterval = setInterval(() => actions[listener.code]?.(), intervalTime)
+        }, 100)
+
     }
 
     public moveFriend(prevCoor: [number, number][], newCoor: [number, number][], color: typeof COLORS[number]) {
