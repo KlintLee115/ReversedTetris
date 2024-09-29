@@ -1,9 +1,9 @@
-import signalR from "@microsoft/signalr";
+import {HubConnectionState} from "@microsoft/signalr";
 import { COLORS } from "./consts";
 import { connection } from "./signalR";
 
 export function sendAMessage() {
-    if (connection && connection.state === signalR.HubConnectionState.Connected) {
+    if (connection && connection.state === HubConnectionState.Connected) {
         connection.invoke("SendMessage", "LMAO")
             .catch(err => console.error("Error invoking SendMessage: ", err.toString()));
     } else {

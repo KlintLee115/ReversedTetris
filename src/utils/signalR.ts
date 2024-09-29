@@ -1,11 +1,11 @@
-import * as signalR from "@microsoft/signalr";
+import {HubConnectionBuilder} from "@microsoft/signalr";
 import { API_URL } from "./consts.ts";
 
 export let connection: signalR.HubConnection;
 
 export function startSignalRConnection(): Promise<void> {
     return new Promise((resolve, reject) => {
-        connection = new signalR.HubConnectionBuilder()
+        connection = new HubConnectionBuilder()
             .withUrl(`${API_URL}/MessageHub`)
             .withAutomaticReconnect()
             .build();
