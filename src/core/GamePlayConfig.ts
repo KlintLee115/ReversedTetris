@@ -17,7 +17,7 @@ export class Game extends Tetris {
 
     public waitingForFriendStatus: HTMLElement
     public waitingForFriendCountdown: HTMLElement
-    public friendArea: HTMLElement | null = null
+    public sideArea: HTMLElement | null = null
     public pauseScreen: HTMLElement
     public hasWon = false
 
@@ -43,6 +43,8 @@ export class Game extends Tetris {
         this.GameMode = gameId === null ? "Solo" : "Friend"
 
         if (this.GameMode === "Solo") {
+            this.mainArea.style.justifyContent = "center"
+            this.mainArea.style.gap = "5vw"
             this.setupPlayingArea()
 
             this.playingArea.style.display = "block"
@@ -50,6 +52,7 @@ export class Game extends Tetris {
         }
 
         else {
+            this.mainArea.style.justifyContent = "space-evenly"
 
             this.waitingForFriendStatus.style.display = "block";
 
@@ -91,11 +94,10 @@ export class Game extends Tetris {
         panel.style.border = "3px solid white"
         panel.style.padding = "4px"
         this.addRowsForSetup(panel)
-        this.mainArea.appendChild(panel)
         return panel
     }
 
-    override setupPlayingArea() {
+    override async setupPlayingArea() {
 
         this.bgMusic1.addEventListener('ended', () => {
             this.currMusic = this.bgMusic2
@@ -108,11 +110,28 @@ export class Game extends Tetris {
 
         this.currMusic.play()
 
-        for (let i = 0; i < (this.GameMode === "Friend" ? 2 : 1); i++) {
+        for (let i = 0; i < 2; i++) {
 
-            const panel = this.createPlayingPanel()
-            if (i === 0) this.playingArea = panel
-            else this.friendArea = panel
+            if (this.GameMode === "Friend") {
+                const panel = this.createPlayingPanel()
+                this.mainArea.appendChild(panel)
+                if (i === 0) this.playingArea = panel
+                else this.sideArea = panel
+            }
+
+            else {
+                if (i === 0) {
+                    this.playingArea = this.createPlayingPanel()
+                    this.mainArea.appendChild(this.playingArea)
+                }
+                else {
+
+                    const {createLeaderboardPanel} = await import('../utils/leaderboard.ts')
+
+                    this.sideArea = createLeaderboardPanel()
+                    this.mainArea.appendChild(this.sideArea)
+                }
+            }
         }
 
         window.addEventListener('keydown', event => this.inGameListener(event))
@@ -205,7 +224,7 @@ export class Game extends Tetris {
     }
 
     private updateFriendArea(coors: [number, number][], color: string) {
-        coors.forEach(coor => colorBlock(coor[0], coor[1], color, this.friendArea as HTMLElement))
+        coors.forEach(coor => colorBlock(coor[0], coor[1], color, this.sideArea as HTMLElement))
     }
 
 }

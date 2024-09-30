@@ -1,6 +1,7 @@
 import { I, J, L, O, S, T, TetrisPiece, Z } from "../TetrisPiece.ts";
 import { colorArea, makeLandingCoors } from "../utils/colors.ts";
 import { BORDER_DEFAULT_COLOR, COLUMNS, DEFAULT_COLOR, HIDDEN_ROWS } from "../utils/consts.ts";
+import { updateScoreIfHigher } from "../utils/leaderboard.ts";
 
 const TETRIS_PIECES = [I, O, J, T, L, S, Z]
 
@@ -12,6 +13,7 @@ export abstract class Tetris {
     public rowsDisplayable: number
     public currInterval: ReturnType<typeof setInterval>
     public mainArea: HTMLElement
+    public currScore = 0
 
     protected currPieceID: number
     protected hasLost = false
@@ -105,6 +107,9 @@ export abstract class Tetris {
         const completedRows = this.getCompletedRows(areaToClear)
 
         if (completedRows.length === 0) return
+
+        this.currScore += (25 * completedRows.length)
+        updateScoreIfHigher(this)
 
         completedRows.forEach((upperBoundRow, idx) => {
             const lowerBoundRow = idx === completedRows.length - 1 ? this.rowsDisplayable - 1 : completedRows[idx + 1] - 1

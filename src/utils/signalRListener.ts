@@ -21,7 +21,7 @@ export async function setupSignalREventListeners(game: Game) {
     })
 
     connection.on("ClearRows", () => {
-        game.clearRows(game.friendArea as HTMLElement, false)
+        game.clearRows(game.sideArea as HTMLElement, false)
     })
 
     connection.on("You Won", () => {
