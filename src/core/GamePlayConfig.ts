@@ -11,6 +11,9 @@ export class Game extends Tetris {
     private GameMode: GameModeType
     private continueButton: HTMLElement
     private keyPressInterval: ReturnType<typeof setInterval>
+    private currMusic: HTMLAudioElement
+    private bgMusic1: HTMLAudioElement
+    private bgMusic2: HTMLAudioElement
 
     public waitingForFriendStatus: HTMLElement
     public waitingForFriendCountdown: HTMLElement
@@ -26,6 +29,13 @@ export class Game extends Tetris {
         this.waitingForFriendStatus = waitingForFriendStatus
         this.waitingForFriendCountdown = waitingForFriendCountdown
         this.keyPressInterval = NaN
+
+        this.bgMusic1 = document.getElementById('backgroundMusic1') as HTMLAudioElement
+        this.bgMusic2 = document.getElementById('backgroundMusic2') as HTMLAudioElement
+        this.bgMusic1.addEventListener('ended', () => this.bgMusic2.play())
+        this.bgMusic2.addEventListener('ended', () => this.bgMusic1.play())
+
+        this.currMusic = this.bgMusic1
 
         const urlParams = new URLSearchParams(window.location.search)
         const gameId = urlParams.get('id')
@@ -87,6 +97,17 @@ export class Game extends Tetris {
 
     override setupPlayingArea() {
 
+        this.bgMusic1.addEventListener('ended', () => {
+            this.currMusic = this.bgMusic2
+            this.bgMusic2.play()
+        })
+        this.bgMusic2.addEventListener('ended', () => {
+            this.currMusic = this.bgMusic1
+            this.bgMusic1.play()
+        })
+
+        this.currMusic.play()
+
         for (let i = 0; i < (this.GameMode === "Friend" ? 2 : 1); i++) {
 
             const panel = this.createPlayingPanel()
@@ -119,6 +140,7 @@ export class Game extends Tetris {
     public togglePause() {
 
         clearInterval(this.currInterval)
+        this.currMusic.pause()
 
         if (this.hasWon || this.hasLost) return
 
@@ -132,6 +154,7 @@ export class Game extends Tetris {
 
     public toggleContinue() {
 
+        this.currMusic.play()
         this.isPaused = false
         this.waitingForFriendStatus.style.display = "none"
         this.mainArea.style.filter = "none"
@@ -142,7 +165,7 @@ export class Game extends Tetris {
 
     }
 
-    private inGameListener(listener: KeyboardEvent) {
+    private async inGameListener(listener: KeyboardEvent) {
 
         if (this.hasLost || this.hasWon) return
 
