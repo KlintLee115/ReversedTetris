@@ -144,6 +144,8 @@ export class Game extends Tetris {
 
     private inGameListener(listener: KeyboardEvent) {
 
+        if (this.hasLost || this.hasWon) return
+
         const shouldNotifyFriend = this.GameMode === "Friend"
 
         if (listener.code === 'Space') {
@@ -165,15 +167,8 @@ export class Game extends Tetris {
 
         if (this.isPaused || !isNaN(this.keyPressInterval)) return
 
-        let intervalTime: number;
-
-        if (listener.code === 'ArrowLeft' || listener.code === 'ArrowRight') {
-            intervalTime = 75
-        } else if (listener.code === 'ArrowUp') {
-            intervalTime = 600
-        } else {
-            return;  // If the key doesn't match, exit early
-        }
+        const intervalTime = (listener.code === 'ArrowLeft' || listener.code === 'ArrowRight') ? 75 : listener.code === 'ArrowUp' ? 600 : undefined
+        if (!intervalTime) return
 
         this.keyPressInterval = setTimeout(() => {
             this.keyPressInterval = setInterval(() => actions[listener.code]?.(), intervalTime)
