@@ -13,18 +13,16 @@ export class Game extends Tetris {
 
     public inGameListenerBound: (event: KeyboardEvent) => void;
     public GameMode: GameModeType
-    public waitingForFriendStatus: HTMLElement
-    public waitingForFriendCountdown: HTMLElement
+    public textStatus: HTMLElement
     public sideArea: HTMLElement | null = null
     public pauseScreen: HTMLElement
 
-    constructor(mainArea: HTMLElement, pauseScreen: HTMLElement, continueButton: HTMLElement, waitingForFriendStatus: HTMLElement, waitingForFriendCountdown: HTMLElement) {
+    constructor(mainArea: HTMLElement, pauseScreen: HTMLElement, continueButton: HTMLElement, textStatus: HTMLElement) {
         super(mainArea, 500, Math.floor(ROWS_DISPLAYABLE * 0.9))
 
         this.pauseScreen = pauseScreen
         this.continueButton = continueButton
-        this.waitingForFriendStatus = waitingForFriendStatus
-        this.waitingForFriendCountdown = waitingForFriendCountdown
+        this.textStatus = textStatus
         this.keyPressInterval = NaN
         this.inGameListenerBound = this.inGameListener.bind(this);
 
@@ -52,39 +50,44 @@ export class Game extends Tetris {
         else {
             this.mainArea.style.justifyContent = "space-evenly"
 
-            this.waitingForFriendStatus.style.display = "block";
+            this.textStatus.style.display = "block";
 
             (async () => {
 
                 const { startSignalRConnection } = await import("../utils/signalR.ts")
                 const { joinRoom } = await import('../utils/signalRSenders.ts')
-                const { shouldMultiGameStart, setupSignalREventListeners } = await import('../utils/signalRListener.ts')
+                
+                const { shouldGameStart, setupSignalRSetupListeners } = await import('../utils/signalRPreGameListener.ts')
+                const { setupSignalRGameListeners } = await import('../utils/signalRGameListener.ts')
 
                 await startSignalRConnection()
+                await setupSignalRSetupListeners(this)
+
                 joinRoom(gameId as string)
 
-                shouldMultiGameStart().then(() => {
-                    setupSignalREventListeners(this)
+                shouldGameStart(this).then(() => {
+                    setupSignalRGameListeners(this)
                     this.setupPlayingArea()
 
-                    this.waitingForFriendStatus.style.display = "none"
+                    this.textStatus.style.display = "none"
                     this.playingArea.style.display = "block"
 
                     this.startNextRound()
+
                 })
             })()
         }
 
-        // window.onblur = async () => {
+        window.onblur = async () => {
 
-        //     if (this.GameMode === "Solo") return
+            if (this.GameMode === "Solo") return
 
-        //     this.togglePause()
+            this.togglePause()
 
-        //     const { notifyPause } = await import("../utils/signalRSenders.ts")
+            const { notifyPause } = await import("../utils/signalRSenders.ts")
 
-        //     notifyPause()
-        // }
+            notifyPause()
+        }
     }
 
     private createPlayingPanel() {
@@ -139,7 +142,8 @@ export class Game extends Tetris {
         if (this.GameMode === "Friend") {
 
             this.continueButton.addEventListener('click', async () => {
-                this.waitingForFriendStatus.style.display = "block"
+                this.textStatus.innerText = "Waiting for friend"
+                this.textStatus.style.display = "block"
                 this.pauseScreen.style.display = "none"
                 this.mainArea.style.display = "none"
 
@@ -158,7 +162,7 @@ export class Game extends Tetris {
         this.currMusic.pause()
 
         this.pauseScreen.style.display = "block"
-        this.waitingForFriendStatus.style.display = "none"
+        this.textStatus.style.display = "none"
         this.mainArea.style.filter = "blur(10px)"
 
     }
@@ -167,7 +171,7 @@ export class Game extends Tetris {
 
         window.addEventListener('keydown', this.inGameListenerBound)
         this.currMusic.play()
-        this.waitingForFriendStatus.style.display = "none"
+        this.textStatus.style.display = "none"
         this.mainArea.style.filter = "none"
         this.mainArea.style.display = "flex"
         this.pauseScreen.style.display = "none"
@@ -191,13 +195,6 @@ export class Game extends Tetris {
             ArrowRight: () => this.currPiece.canMoveRight() && this.currPiece.moveRight(),
             ArrowDown: () => this.currPiece.rotate(),
             ArrowUp: () => this.currPiece.canMoveUp() && this.currPiece.moveUp(),
-            Enter: async () => {
-                this.togglePause()
-
-                const { notifyPause } = await import("../utils/signalRSenders.ts")
-
-                notifyPause()
-            }
         }
 
         actions[listener.code]?.()

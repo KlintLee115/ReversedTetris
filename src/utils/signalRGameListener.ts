@@ -2,7 +2,13 @@ import { Game } from "../core/GamePlayConfig"
 import { COLORS } from "./consts"
 import { connection } from "./signalR"
 
-export async function setupSignalREventListeners(game: Game) {
+export async function setupSignalRGameListeners(game: Game) {
+
+    connection.on("LeaveGame", () => {
+        clearInterval(game.currInterval)
+        game.textStatus.style.display = "none"
+        window.removeEventListener('keydown', game.inGameListenerBound)
+    })
 
     connection.on("ReceiveMovement", (data: {
         prevCoor: [number, number][],
@@ -13,11 +19,6 @@ export async function setupSignalREventListeners(game: Game) {
         const { prevCoor, newCoor, color } = data
 
         game.moveFriend(prevCoor, newCoor, color)
-    })
-
-    connection.on("LeaveGame", () => {
-        alert('Your friend has left the game. Continue to go to home screen')
-        window.location.href = "/"
     })
 
     connection.on("ClearRows", () => {
@@ -32,32 +33,26 @@ export async function setupSignalREventListeners(game: Game) {
         game.pauseScreen.style.display = "none"
         game.mainArea.style.display = "flex"
     })
-    connection.on("Pause", () => game.togglePause())
+
     connection.on("Continue", () => {
 
-        game.waitingForFriendStatus.style.display = "none"
-        game.waitingForFriendCountdown.style.display = "block"
+        game.textStatus.style.display = "none"
+        game.textStatus.style.display = "block"
 
         let remainingSeconds = 3
 
         let interval = setInterval(() => {
 
             if (remainingSeconds > 0) {
-                game.waitingForFriendCountdown.innerHTML = remainingSeconds.toString()
+                game.textStatus.innerHTML = remainingSeconds.toString()
                 remainingSeconds--
             }
             else {
-                game.waitingForFriendCountdown.innerHTML = ""
-                game.waitingForFriendCountdown.style.display = "none"
+                game.textStatus.innerHTML = ""
+                game.textStatus.style.display = "none"
                 clearInterval(interval)
                 game.toggleContinue()
             }
         }, 1000)
-    })
-}
-
-export function shouldMultiGameStart(): Promise<void> {
-    return new Promise(async (resolve, _) => {
-        connection.on('GameShouldStart', () => resolve())
     })
 }
