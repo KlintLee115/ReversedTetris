@@ -2,6 +2,7 @@ import { I, J, L, O, S, T, TetrisPiece, Z } from "../TetrisPiece.ts";
 import { colorArea, makeLandingCoors } from "../utils/colors.ts";
 import { BORDER_DEFAULT_COLOR, COLUMNS, DEFAULT_COLOR, HIDDEN_ROWS } from "../utils/consts.ts";
 import { updateScoreIfHigher } from "../utils/leaderboard.ts";
+import { Game } from "./GamePlayConfig.ts";
 
 const TETRIS_PIECES = [I, O, J, T, L, S, Z]
 
@@ -19,13 +20,11 @@ export abstract class Tetris {
     protected hasLost = false
 
     private intervalBaseTime: number
-    private IsGame: boolean
 
-    constructor(mainArea: HTMLElement, intervalBaseTime: number, rowsDisplayable: number, isGame: boolean) {
+    constructor(mainArea: HTMLElement, intervalBaseTime: number, rowsDisplayable: number) {
         this.mainArea = mainArea
         this.playingArea = document.createElement('div')
         this.currPieceID = 0
-        this.IsGame = isGame
 
         this.currPiece = this.newPiece()
         this.currInterval = 0
@@ -43,16 +42,16 @@ export abstract class Tetris {
         }
     }
 
-    protected async startNextRound(shouldNotifyFriend: boolean) {
+    protected async startNextRound() {
 
         this.currPieceID += 1
         this.currPiece = this.newPiece()
 
-        const isSuccess = await this.movePieceIntoPlayingArea(shouldNotifyFriend)
+        const isSuccess = await this.movePieceIntoPlayingArea()
 
         if (!isSuccess) return
 
-        this.startIntervals(shouldNotifyFriend)
+        this.startIntervals()
         makeLandingCoors(this)
     }
 
@@ -67,26 +66,26 @@ export abstract class Tetris {
         return completeRows
     }
 
-    protected startIntervals(shouldNotifyFriend: boolean) {
+    protected startIntervals() {
 
         this.currInterval = setInterval(async () => {
 
             if (this.currPiece.hasHitTop()) {
 
                 clearInterval(this.currInterval)
-                this.clearRows(this.playingArea, shouldNotifyFriend)
-                this.startNextRound(shouldNotifyFriend)
+                this.clearRows(this.playingArea)
+                this.startNextRound()
                 return
             }
 
-            this.currPiece.moveUp(shouldNotifyFriend)
+            this.currPiece.moveUp()
 
         }, this.intervalBaseTime - (20 * (Math.floor(this.currPieceID / 5))))
     }
 
-    protected clearRound(shouldNotifyFriend: boolean) {
+    protected clearRound() {
         clearInterval(this.currInterval)
-        this.clearRows(this.playingArea, shouldNotifyFriend)
+        this.clearRows(this.playingArea)
     }
 
     // check for completed rows, clear them and move up
@@ -102,7 +101,7 @@ export abstract class Tetris {
     therefore, 1->0, 3->1, 6->2, correct
     */
 
-    public async clearRows(areaToClear: HTMLElement, shouldNotifyFriend: boolean) {
+    public async clearRows(areaToClear: HTMLElement) {
 
         const completedRows = this.getCompletedRows(areaToClear)
 
@@ -127,15 +126,16 @@ export abstract class Tetris {
             }
         })
 
-        if (shouldNotifyFriend) {
-
+        if (this instanceof Game && this.GameMode === "Friend") {
             const { notifyClearRows } = await import("../utils/signalRSenders.ts")
             notifyClearRows(completedRows)
         }
     }
 
 
-    private async movePieceIntoPlayingArea(shouldNotifyFriend: boolean) : Promise<boolean> {
+    private async movePieceIntoPlayingArea(): Promise<boolean> {
+
+        const shouldNotifyFriend = this instanceof Game && this.GameMode === "Friend"
 
         while (this.currPiece.coor.some(coor => coor[0] > this.rowsDisplayable)) {
 
@@ -149,11 +149,11 @@ export abstract class Tetris {
                     await notifyGameOver()
                 }
 
-                if (this.IsGame) alert("Game Over")
+                if (this instanceof Game) alert("Game Over")
 
                 return false
             }
-            else this.currPiece.moveUp(shouldNotifyFriend)
+            else this.currPiece.moveUp()
         }
 
         colorArea(this.currPiece, this.currPiece.color, this.playingArea)

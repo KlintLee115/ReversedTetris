@@ -7,11 +7,11 @@ export class HomeBackgroundConfig extends Tetris {
         this.setupPlayingArea()
 
         this.playingArea.style.display = "block"
-        this.startNextRound(false)
+        this.startNextRound()
     }
 
     constructor(mainArea: HTMLElement) {
-        super(mainArea, 50, ROWS_DISPLAYABLE, false)
+        super(mainArea, 50, ROWS_DISPLAYABLE)
 
         this.customSetup()
     }

@@ -21,7 +21,7 @@ export async function setupSignalREventListeners(game: Game) {
     })
 
     connection.on("ClearRows", () => {
-        game.clearRows(game.sideArea as HTMLElement, false)
+        game.clearRows(game.sideArea as HTMLElement)
     })
 
     connection.on("You Won", () => {
@@ -57,6 +57,6 @@ export async function setupSignalREventListeners(game: Game) {
 
 export function shouldMultiGameStart(): Promise<void> {
     return new Promise(async (resolve, _) => {
-        connection.on('UpdateGroupCount', (cnt: number) => cnt === 2 && resolve())
+        connection.on('GameShouldStart', () => resolve())
     })
 }

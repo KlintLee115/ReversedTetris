@@ -1,20 +1,22 @@
 import { Tetris } from './Tetris.ts'
 import { COLORS, DEFAULT_COLOR, ROWS_DISPLAYABLE } from '../utils/consts.js'
 import { colorBlock } from '../utils/colors.ts'
+import { notifyPause } from '../utils/signalRSenders.ts'
 
 export type GameModeType = "Friend" | "Solo"
 
 const LOCAL_ROWS_DISPLAYABLE = Math.floor(ROWS_DISPLAYABLE * 0.9)
 
 export class Game extends Tetris {
+
     private isPaused = false
-    private GameMode: GameModeType
     private continueButton: HTMLElement
     private keyPressInterval: ReturnType<typeof setInterval>
     private currMusic: HTMLAudioElement
     private bgMusic1: HTMLAudioElement
     private bgMusic2: HTMLAudioElement
 
+    public GameMode: GameModeType
     public waitingForFriendStatus: HTMLElement
     public waitingForFriendCountdown: HTMLElement
     public sideArea: HTMLElement | null = null
@@ -22,7 +24,7 @@ export class Game extends Tetris {
     public hasWon = false
 
     constructor(mainArea: HTMLElement, pauseScreen: HTMLElement, continueButton: HTMLElement, waitingForFriendStatus: HTMLElement, waitingForFriendCountdown: HTMLElement) {
-        super(mainArea, 500, LOCAL_ROWS_DISPLAYABLE, true)
+        super(mainArea, 500, LOCAL_ROWS_DISPLAYABLE)
 
         this.pauseScreen = pauseScreen
         this.continueButton = continueButton
@@ -48,7 +50,7 @@ export class Game extends Tetris {
             this.setupPlayingArea()
 
             this.playingArea.style.display = "block"
-            this.startNextRound(false)
+            this.startNextRound()
         }
 
         else {
@@ -72,21 +74,21 @@ export class Game extends Tetris {
                     this.waitingForFriendStatus.style.display = "none"
                     this.playingArea.style.display = "block"
 
-                    this.startNextRound(true)
+                    this.startNextRound()
                 })
             })()
         }
 
-        window.onblur = async () => {
+        // window.onblur = async () => {
 
-            if (this.GameMode === "Solo") return
+        //     if (this.GameMode === "Solo") return
 
-            this.togglePause()
+        //     this.togglePause()
 
-            const { notifyPause } = await import("../utils/signalRSenders.ts")
+        //     const { notifyPause } = await import("../utils/signalRSenders.ts")
 
-            notifyPause()
-        }
+        //     notifyPause()
+        // }
     }
 
     private createPlayingPanel() {
@@ -180,7 +182,7 @@ export class Game extends Tetris {
         this.mainArea.style.display = "flex"
         this.pauseScreen.style.display = "none"
 
-        this.startIntervals(this.GameMode === "Friend")
+        this.startIntervals()
 
     }
 
@@ -188,21 +190,23 @@ export class Game extends Tetris {
 
         if (this.hasLost || this.hasWon) return
 
-        const shouldNotifyFriend = this.GameMode === "Friend"
-
         if (listener.code === 'Space') {
-            this.currPiece.upAllTheWay(shouldNotifyFriend);
-            this.clearRound(shouldNotifyFriend);
-            this.startNextRound(shouldNotifyFriend);
+            this.currPiece.upAllTheWay();
+            this.clearRound();
+            this.startNextRound();
 
             return
         }
 
         const actions: { [key: string]: () => void } = {
-            ArrowLeft: () => this.currPiece.canMoveLeft() && this.currPiece.moveLeft(shouldNotifyFriend),
-            ArrowRight: () => this.currPiece.canMoveRight() && this.currPiece.moveRight(shouldNotifyFriend),
-            ArrowDown: () => this.currPiece.rotate(shouldNotifyFriend),
-            ArrowUp: () => this.currPiece.canMoveUp() && this.currPiece.moveUp(shouldNotifyFriend)
+            ArrowLeft: () => this.currPiece.canMoveLeft() && this.currPiece.moveLeft(),
+            ArrowRight: () => this.currPiece.canMoveRight() && this.currPiece.moveRight(),
+            ArrowDown: () => this.currPiece.rotate(),
+            ArrowUp: () => this.currPiece.canMoveUp() && this.currPiece.moveUp(),
+            Enter: () => {
+                notifyPause()
+                this.togglePause()
+            }
         }
 
         actions[listener.code]?.()
