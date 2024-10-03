@@ -1,14 +1,10 @@
 import { Tetris } from './Tetris.ts'
-import { COLORS, DEFAULT_COLOR, ROWS_DISPLAYABLE } from '../utils/consts.js'
+import { COLORS, DEFAULT_COLOR } from '../utils/consts.js'
 import { colorBlock } from '../utils/colors.ts'
-import { notifyPause } from '../utils/signalRSenders.ts'
 
 export type GameModeType = "Friend" | "Solo"
 
-const LOCAL_ROWS_DISPLAYABLE = Math.floor(ROWS_DISPLAYABLE * 0.9)
-
 export class Game extends Tetris {
-
     private isPaused = false
     private continueButton: HTMLElement
     private keyPressInterval: ReturnType<typeof setInterval>
@@ -24,7 +20,7 @@ export class Game extends Tetris {
     public hasWon = false
 
     constructor(mainArea: HTMLElement, pauseScreen: HTMLElement, continueButton: HTMLElement, waitingForFriendStatus: HTMLElement, waitingForFriendCountdown: HTMLElement) {
-        super(mainArea, 500, LOCAL_ROWS_DISPLAYABLE)
+        super(mainArea, 500)
 
         this.pauseScreen = pauseScreen
         this.continueButton = continueButton
@@ -128,7 +124,7 @@ export class Game extends Tetris {
                 }
                 else {
 
-                    const {createLeaderboardPanel} = await import('../utils/leaderboard.ts')
+                    const { createLeaderboardPanel } = await import('../utils/leaderboard.ts')
 
                     this.sideArea = createLeaderboardPanel()
                     this.mainArea.appendChild(this.sideArea)
@@ -203,9 +199,12 @@ export class Game extends Tetris {
             ArrowRight: () => this.currPiece.canMoveRight() && this.currPiece.moveRight(),
             ArrowDown: () => this.currPiece.rotate(),
             ArrowUp: () => this.currPiece.canMoveUp() && this.currPiece.moveUp(),
-            Enter: () => {
-                notifyPause()
+            Enter: async () => {
                 this.togglePause()
+
+                const { notifyPause } = await import("../utils/signalRSenders.ts")
+
+                notifyPause()
             }
         }
 

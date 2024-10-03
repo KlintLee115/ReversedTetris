@@ -47,6 +47,6 @@ export function notifyPause() {
 
 export function requestContinue() {
 
-    connection.invoke("Continue")
+    connection.invoke("RequestContinue")
         .catch(err => console.error("Error invoking SendMovement: ", err.toString()));
 }

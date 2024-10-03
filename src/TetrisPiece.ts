@@ -1,4 +1,3 @@
-import { Game } from "./core/GamePlayConfig";
 import { Tetris } from "./core/Tetris";
 import { colorArea, makeLandingCoors, removeLandingCoors, uncolorCoors } from "./utils/colors";
 import { HIDDEN_ROWS, ROWS_DISPLAYABLE, COLORS, DEFAULT_COLOR, COLUMNS } from "./utils/consts";
@@ -13,7 +12,7 @@ export abstract class TetrisPiece {
     private id: number;
     private static CURR_COLOR_IDX = 0;
     private playingArea: HTMLElement
-    private Tetris: Tetris
+    private TetrisMode: Tetris
 
     protected centerCoor: [number, number];
     protected orientationIDX: number;
@@ -23,7 +22,7 @@ export abstract class TetrisPiece {
 
     constructor(tetris: Tetris, newId: number, playingArea: HTMLElement) {
 
-        this.Tetris = tetris
+        this.TetrisMode = tetris
         this.color = COLORS[TetrisPiece.CURR_COLOR_IDX];
         this.id = newId;
         this.playingArea = playingArea
@@ -66,15 +65,13 @@ export abstract class TetrisPiece {
         for (let moveUnit = 0; moveUnit < 4; moveUnit++) {
             const leftMove = newCoor.map(([row, col]) => [row, col - moveUnit] as [number, number]);
             const rightMove = newCoor.map(([row, col]) => [row, col + moveUnit] as [number, number]);
-    
+
             if (this.canMove(leftMove)) return this.applyRotation(-moveUnit, leftMove, newOrientationIdx);
             if (this.canMove(rightMove)) return this.applyRotation(moveUnit, rightMove, newOrientationIdx);
         }
     }
 
     private async applyRotation(moveUnit: number, newCoor: [number, number][], newOrientationIdx: number) {
-        
-        const shouldNotifyFriend = this.Tetris instanceof Game && this.Tetris.GameMode === "Friend"
 
         for (let i = 0; i < Math.abs(moveUnit); i++) {
             if (moveUnit < 0) this.moveLeft()
@@ -84,18 +81,20 @@ export abstract class TetrisPiece {
         const oldCoor = this.coor
 
         uncolorCoors(this.coor, this.playingArea)
-    
+
         this.orientationIDX = newOrientationIdx;
         this.coor = newCoor;
         colorArea(this, this.color, this.playingArea);
-    
-        if (shouldNotifyFriend) {
+
+        const { Game } = await import('./core/GamePlayConfig')
+
+        if (this.TetrisMode instanceof Game && this.TetrisMode.GameMode === "Friend") {
             const { notifyMovement } = await import('./utils/signalRSenders');
             notifyMovement(oldCoor, this.coor, this.color);
         }
-    
-        removeLandingCoors(this.Tetris);
-        makeLandingCoors(this.Tetris);
+
+        removeLandingCoors(this.TetrisMode);
+        makeLandingCoors(this.TetrisMode);
     }
 
     hasHitTop() {
@@ -115,8 +114,6 @@ export abstract class TetrisPiece {
 
     async shiftCoor(rowOrCol: number, magnitude: number) {
 
-        const shouldNotifyFriend = this.Tetris instanceof Game && this.Tetris.GameMode === "Friend"
-
         uncolorCoors(this.coor, this.playingArea)
 
         const oldCoor = this.coor
@@ -126,15 +123,18 @@ export abstract class TetrisPiece {
 
         colorArea(this, this.color, this.playingArea)
 
-        if (shouldNotifyFriend) {
-            const {notifyMovement} = await import('./utils/signalRSenders')
-            
+        const { Game } = await import('./core/GamePlayConfig')
+
+        if (this.TetrisMode instanceof Game && this.TetrisMode.GameMode === "Friend") {
+            const { notifyMovement } = await import('./utils/signalRSenders')
+
             notifyMovement(oldCoor, this.coor, this.color)
         }
+
         // reset landing coors only if action is not move up
         if (!(rowOrCol === 0 && magnitude === -1)) {
-            removeLandingCoors(this.Tetris)
-            makeLandingCoors(this.Tetris)
+            removeLandingCoors(this.TetrisMode)
+            makeLandingCoors(this.TetrisMode)
         }
     }
 

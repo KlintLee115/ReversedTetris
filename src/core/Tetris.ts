@@ -1,8 +1,7 @@
 import { I, J, L, O, S, T, TetrisPiece, Z } from "../TetrisPiece.ts";
 import { colorArea, makeLandingCoors } from "../utils/colors.ts";
-import { BORDER_DEFAULT_COLOR, COLUMNS, DEFAULT_COLOR, HIDDEN_ROWS } from "../utils/consts.ts";
+import { BORDER_DEFAULT_COLOR, COLUMNS, DEFAULT_COLOR, HIDDEN_ROWS, ROWS_DISPLAYABLE } from "../utils/consts.ts";
 import { updateScoreIfHigher } from "../utils/leaderboard.ts";
-import { Game } from "./GamePlayConfig.ts";
 
 const TETRIS_PIECES = [I, O, J, T, L, S, Z]
 
@@ -11,7 +10,7 @@ export abstract class Tetris {
     public playingArea: HTMLElement
     public currPiece: TetrisPiece
     public landingCoors: [number, number][] = []
-    public rowsDisplayable: number
+    public rowsDisplayable = ROWS_DISPLAYABLE
     public currInterval: ReturnType<typeof setInterval>
     public mainArea: HTMLElement
     public currScore = 0
@@ -21,7 +20,7 @@ export abstract class Tetris {
 
     private intervalBaseTime: number
 
-    constructor(mainArea: HTMLElement, intervalBaseTime: number, rowsDisplayable: number) {
+    constructor(mainArea: HTMLElement, intervalBaseTime: number) {
         this.mainArea = mainArea
         this.playingArea = document.createElement('div')
         this.currPieceID = 0
@@ -29,7 +28,12 @@ export abstract class Tetris {
         this.currPiece = this.newPiece()
         this.currInterval = 0
         this.intervalBaseTime = intervalBaseTime
-        this.rowsDisplayable = rowsDisplayable
+        this.setupRowsDisplayable()
+    }
+
+    private async setupRowsDisplayable() {
+        const { Game } = await import("./GamePlayConfig.ts");
+        this.rowsDisplayable = this instanceof Game ? Math.floor(ROWS_DISPLAYABLE * 0.9) : ROWS_DISPLAYABLE;
     }
 
     public getLandingCoors(pieceId: number, currPieceCoors: [number, number][]): [number, number][] {
@@ -126,6 +130,8 @@ export abstract class Tetris {
             }
         })
 
+        const { Game } = await import('./GamePlayConfig.ts')
+
         if (this instanceof Game && this.GameMode === "Friend") {
             const { notifyClearRows } = await import("../utils/signalRSenders.ts")
             notifyClearRows(completedRows)
@@ -135,21 +141,22 @@ export abstract class Tetris {
 
     private async movePieceIntoPlayingArea(): Promise<boolean> {
 
-        const shouldNotifyFriend = this instanceof Game && this.GameMode === "Friend"
-
         while (this.currPiece.coor.some(coor => coor[0] > this.rowsDisplayable)) {
 
             if (this.currPiece.hasHitTop()) {
                 this.hasLost = true
                 clearInterval(this.currInterval)
 
-                if (shouldNotifyFriend) {
-                    const { notifyGameOver } = await import("../utils/signalRSenders.ts")
+                const { Game } = await import('./GamePlayConfig.ts')
 
-                    await notifyGameOver()
+                if (this instanceof Game) {
+                    alert("Game Over")
+                    if (this.GameMode === "Friend") {
+                        const { notifyGameOver } = await import("../utils/signalRSenders.ts")
+
+                        await notifyGameOver()
+                    }
                 }
-
-                if (this instanceof Game) alert("Game Over")
 
                 return false
             }
