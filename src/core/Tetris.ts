@@ -158,9 +158,10 @@ export abstract class Tetris {
                         await notifyGameOver()
                     }
 
+                alert("Game Over")
+
                 }
 
-                alert("Game Over")
 
                 return false
             }
