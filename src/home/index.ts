@@ -1,4 +1,4 @@
-import { API_URL } from "../utils/consts"
+import { API_URL } from "../consts"
 
 const soloButton = document.getElementById('solo-button') as HTMLButtonElement
 const friendButton = document.getElementById('friend-button') as HTMLButtonElement

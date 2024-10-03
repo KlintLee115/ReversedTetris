@@ -1,5 +1,5 @@
-import { Game } from "../core/GamePlayConfig"
-import { COLORS } from "./consts"
+import { Game } from "../../core/GamePlayConfig"
+import { COLORS } from "../../consts"
 import { connection } from "./signalR"
 
 export async function setupSignalRGameListeners(game: Game) {
@@ -22,7 +22,7 @@ export async function setupSignalRGameListeners(game: Game) {
     })
 
     connection.on("ClearRows", () => {
-        game.clearRows(game.sideArea as HTMLElement)
+        game.ClearRows(game.sideArea as HTMLElement)
     })
 
     connection.on("You Won", () => {

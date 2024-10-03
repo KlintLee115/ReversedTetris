@@ -1,6 +1,6 @@
 import { Tetris } from './Tetris.ts'
-import { COLORS, DEFAULT_COLOR, ROWS_DISPLAYABLE } from '../utils/consts.js'
-import { colorBlock } from '../utils/colors.ts'
+import { COLORS, DEFAULT_COLOR, ROWS_DISPLAYABLE } from '../consts.js'
+import { UIService } from '../Services/UiService.ts'
 
 export type GameModeType = "Friend" | "Solo"
 
@@ -44,7 +44,7 @@ export class Game extends Tetris {
             this.setupPlayingArea()
 
             this.playingArea.style.display = "block"
-            this.startNextRound()
+            this.StartNextRound()
         }
 
         else {
@@ -54,11 +54,11 @@ export class Game extends Tetris {
 
             (async () => {
 
-                const { startSignalRConnection } = await import("../utils/signalR.ts")
-                const { joinRoom } = await import('../utils/signalRSenders.ts')
+                const { startSignalRConnection } = await import('../Services/signalR/signalR.ts')
+                const { joinRoom } = await import('../Services/signalR/signalRSenders.ts')
                 
-                const { shouldGameStart, setupSignalRSetupListeners } = await import('../utils/signalRPreGameListener.ts')
-                const { setupSignalRGameListeners } = await import('../utils/signalRGameListener.ts')
+                const { shouldGameStart, setupSignalRSetupListeners } = await import('../Services/signalR/signalRPreGameListener.ts')
+                const { setupSignalRGameListeners } = await import('../Services/signalR/signalRGameListener.ts')
 
                 await startSignalRConnection()
                 await setupSignalRSetupListeners(this)
@@ -72,7 +72,7 @@ export class Game extends Tetris {
                     this.textStatus.style.display = "none"
                     this.playingArea.style.display = "block"
 
-                    this.startNextRound()
+                    this.StartNextRound()
 
                 })
             })()
@@ -84,7 +84,7 @@ export class Game extends Tetris {
 
             this.togglePause()
 
-            const { notifyPause } = await import("../utils/signalRSenders.ts")
+            const { notifyPause } = await import("../Services/signalR/signalRSenders.ts")
 
             notifyPause()
         }
@@ -94,7 +94,7 @@ export class Game extends Tetris {
         const panel = document.createElement('div')
         panel.style.border = "3px solid white"
         panel.style.padding = "4px"
-        this.addRowsForSetup(panel)
+        UIService.AddRowsForSetup(this.rowsDisplayable, panel)
         return panel
     }
 
@@ -125,7 +125,7 @@ export class Game extends Tetris {
                 this.mainArea.appendChild(this.playingArea)
             }
             else {
-                const { createLeaderboardPanel } = await import('../utils/leaderboard.ts')
+                const { createLeaderboardPanel } = await import('../Services/LeaderboardService.ts')
                 this.sideArea = createLeaderboardPanel()
                 this.mainArea.appendChild(this.sideArea)
             }
@@ -147,7 +147,7 @@ export class Game extends Tetris {
                 this.pauseScreen.style.display = "none"
                 this.mainArea.style.display = "none"
 
-                const { requestContinue } = await import("../utils/signalRSenders.ts")
+                const { requestContinue } = await import("../Services/signalR/signalRSenders.ts")
 
                 requestContinue()
             })
@@ -176,25 +176,25 @@ export class Game extends Tetris {
         this.mainArea.style.display = "flex"
         this.pauseScreen.style.display = "none"
 
-        this.startIntervals()
+        this.StartIntervals()
 
     }
 
     private async inGameListener(listener: KeyboardEvent) {
 
         if (listener.code === 'Space') {
-            this.currPiece.upAllTheWay();
-            this.clearRound();
-            this.startNextRound();
+            this.currPiece.UpAllTheWay();
+            this.ClearRound();
+            this.StartNextRound();
 
             return
         }
 
         const actions: { [key: string]: () => void } = {
-            ArrowLeft: () => this.currPiece.canMoveLeft() && this.currPiece.moveLeft(),
-            ArrowRight: () => this.currPiece.canMoveRight() && this.currPiece.moveRight(),
-            ArrowDown: () => this.currPiece.rotate(),
-            ArrowUp: () => this.currPiece.canMoveUp() && this.currPiece.moveUp(),
+            ArrowLeft: () => this.currPiece.CanMoveLeft() && this.currPiece.MoveLeft(),
+            ArrowRight: () => this.currPiece.CanMoveRight() && this.currPiece.MoveRight(),
+            ArrowDown: () => this.currPiece.Rotate(),
+            ArrowUp: () => this.currPiece.CanMoveUp() && this.currPiece.MoveUp(),
         }
 
         actions[listener.code]?.()
@@ -219,7 +219,7 @@ export class Game extends Tetris {
     }
 
     private updateFriendArea(coors: [number, number][], color: string) {
-        coors.forEach(coor => colorBlock(coor[0], coor[1], color, this.sideArea as HTMLElement))
+        coors.forEach(coor => UIService.ColorBlock(coor[0], coor[1], color, this.sideArea as HTMLElement))
     }
 
 }

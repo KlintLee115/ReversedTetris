@@ -1,4 +1,4 @@
-import { Game } from "../core/GamePlayConfig"
+import { Game } from "../../core/GamePlayConfig"
 import { connection } from "./signalR"
 
 let interval: ReturnType<typeof setInterval>

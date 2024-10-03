@@ -1,6 +1,6 @@
-import { Tetris } from "./core/Tetris";
-import { colorArea, makeLandingCoors, removeLandingCoors, uncolorCoors } from "./utils/colors";
-import { HIDDEN_ROWS, ROWS_DISPLAYABLE, COLORS, DEFAULT_COLOR, COLUMNS } from "./utils/consts";
+import { Tetris } from "./Tetris";
+import { UIService } from "../Services/UiService";
+import { HIDDEN_ROWS, ROWS_DISPLAYABLE, COLORS, DEFAULT_COLOR, COLUMNS } from "../consts";
 
 const COOR = {
     Row: 0,
@@ -12,7 +12,7 @@ export abstract class TetrisPiece {
     private id: number;
     private static CURR_COLOR_IDX = 0;
     private playingArea: HTMLElement
-    private TetrisMode: Tetris
+    private _Tetris: Tetris
 
     protected centerCoor: [number, number];
     protected orientationIDX: number;
@@ -22,33 +22,33 @@ export abstract class TetrisPiece {
 
     constructor(tetris: Tetris, newId: number, playingArea: HTMLElement) {
 
-        this.TetrisMode = tetris
+        this._Tetris = tetris
         this.color = COLORS[TetrisPiece.CURR_COLOR_IDX];
         this.id = newId;
         this.playingArea = playingArea
 
         this.centerCoor = [ROWS_DISPLAYABLE + HIDDEN_ROWS - 1, Math.floor(Math.random() * 7)];
-        this.orientationIDX = Math.floor(Math.random() * this.getOrientations().length);
-        this.coor = this.getOrientations()[this.orientationIDX]
+        this.orientationIDX = Math.floor(Math.random() * this.GetOrientations().length);
+        this.coor = this.GetOrientations()[this.orientationIDX]
 
         while (this.coor.some(([row, _]) => row >= tetris.rowsDisplayable + HIDDEN_ROWS)) {
-            this.centerCoor[0]--; // Reduce the row for the center coordinate
-            this.coor = this.getOrientations()[this.orientationIDX]; // Recalculate coordinates
+            this.centerCoor[0]--
+            this.coor = this.GetOrientations()[this.orientationIDX]
         }
 
-        this.adjustPiecePositionToBoundary();
+        this.AdjustPiecePositionToBoundary();
 
         if (TetrisPiece.CURR_COLOR_IDX === COLORS.length - 1) TetrisPiece.CURR_COLOR_IDX = 0
         else TetrisPiece.CURR_COLOR_IDX++
     }
 
-    protected abstract getOrientations(): [number, number][][]
+    protected abstract GetOrientations(): [number, number][][]
 
-    setId = (newId: number) => this.id = newId
+    SetId = (newId: number) => this.id = newId
 
-    getId = () => this.id
+    GetId = () => this.id
 
-    private canMove(newCoor: [number, number][]): boolean {
+    private CanMove(newCoor: [number, number][]): boolean {
         return newCoor.every(([row, col]) => {
             const rowElement = this.playingArea.children.item(row) as HTMLElement
             const colElement = rowElement?.children.item(col) as HTMLElement
@@ -56,48 +56,51 @@ export abstract class TetrisPiece {
         });
     }
 
-    async rotate() {
+    async Rotate() {
 
-        const newOrientationIdx = this.orientationIDX === this.getOrientations().length - 1 ? 0 : this.orientationIDX + 1;
+        const newOrientationIdx = this.orientationIDX === this.GetOrientations().length - 1 ? 0 : this.orientationIDX + 1;
 
-        const newCoor = this.getOrientations()[newOrientationIdx];
+        const newCoor = this.GetOrientations()[newOrientationIdx];
 
         for (let moveUnit = 0; moveUnit < 4; moveUnit++) {
             const leftMove = newCoor.map(([row, col]) => [row, col - moveUnit] as [number, number]);
             const rightMove = newCoor.map(([row, col]) => [row, col + moveUnit] as [number, number]);
 
-            if (this.canMove(leftMove)) return this.applyRotation(-moveUnit, leftMove, newOrientationIdx);
-            if (this.canMove(rightMove)) return this.applyRotation(moveUnit, rightMove, newOrientationIdx);
+            if (this.CanMove(leftMove)) return this.ApplyRotation(-moveUnit, leftMove, newOrientationIdx);
+            if (this.CanMove(rightMove)) return this.ApplyRotation(moveUnit, rightMove, newOrientationIdx);
         }
     }
 
-    private async applyRotation(moveUnit: number, newCoor: [number, number][], newOrientationIdx: number) {
+    private async ApplyRotation(moveUnit: number, newCoor: [number, number][], newOrientationIdx: number) {
 
         for (let i = 0; i < Math.abs(moveUnit); i++) {
-            if (moveUnit < 0) this.moveLeft()
-            else this.moveRight()
+            if (moveUnit < 0) this.MoveLeft()
+            else this.MoveRight()
         }
 
         const oldCoor = this.coor
 
-        uncolorCoors(this.coor, this.playingArea)
+        UIService.UncolorCoors(this.coor, this.playingArea)
 
         this.orientationIDX = newOrientationIdx;
         this.coor = newCoor;
-        colorArea(this, this.color, this.playingArea);
+        UIService.ColorArea(this.coor, this.GetId(), this.color, this.playingArea);
 
-        const { Game } = await import('./core/GamePlayConfig')
+        const { Game } = await import('./GamePlayConfig')
 
-        if (this.TetrisMode instanceof Game && this.TetrisMode.GameMode === "Friend") {
-            const { notifyMovement } = await import('./utils/signalRSenders');
+        if (this._Tetris instanceof Game && this._Tetris.GameMode === "Friend") {
+            const { notifyMovement } = await import('../Services/signalR/signalRSenders');
             notifyMovement(oldCoor, this.coor, this.color);
         }
 
-        removeLandingCoors(this.TetrisMode);
-        makeLandingCoors(this.TetrisMode);
+        UIService.RemoveLandingCoors(this._Tetris.landingCoors, this._Tetris.playingArea);
+
+        this._Tetris.updateLandingCoors()
+
+        UIService.ColorLandingCoors(this._Tetris.landingCoors, this.color, this._Tetris.playingArea)
     }
 
-    hasHitTop() {
+    HasHitTop() {
 
         return this.coor.some(([row, col]) => {
             const rowAbove = this.playingArea.children.item(row - 1) as HTMLElement;
@@ -106,51 +109,52 @@ export abstract class TetrisPiece {
         })
     }
 
-    canMoveRight = () => this.canMove(this.coor.map(([row, col]) => [row, col + 1] as [number, number]))
+    CanMoveRight = () => this.CanMove(this.coor.map(([row, col]) => [row, col + 1] as [number, number]))
 
-    canMoveLeft = () => this.canMove(this.coor.map(([row, col]) => [row, col - 1] as [number, number]))
+    CanMoveLeft = () => this.CanMove(this.coor.map(([row, col]) => [row, col - 1] as [number, number]))
 
-    canMoveUp = () => this.canMove(this.coor.map(([row, col]) => [row - 1, col] as [number, number]));
+    CanMoveUp = () => this.CanMove(this.coor.map(([row, col]) => [row - 1, col] as [number, number]));
 
-    async shiftCoor(rowOrCol: number, magnitude: number) {
+    async ShiftCoor(rowOrCol: number, magnitude: number) {
 
-        uncolorCoors(this.coor, this.playingArea)
+        UIService.UncolorCoors(this.coor, this.playingArea)
 
         const oldCoor = this.coor
 
         this.centerCoor[rowOrCol === COOR.Row ? COOR.Row : COOR.Col] += magnitude;
-        this.coor = this.getOrientations()[this.orientationIDX]
+        this.coor = this.GetOrientations()[this.orientationIDX]
 
-        colorArea(this, this.color, this.playingArea)
+        UIService.ColorArea(this.coor, this.GetId(), this.color, this.playingArea)
 
-        const { Game } = await import('./core/GamePlayConfig')
+        const { Game } = await import('./GamePlayConfig')
 
-        if (this.TetrisMode instanceof Game && this.TetrisMode.GameMode === "Friend") {
-            const { notifyMovement } = await import('./utils/signalRSenders')
+        if (this._Tetris instanceof Game && this._Tetris.GameMode === "Friend") {
+            const { notifyMovement } = await import('../Services/signalR/signalRSenders')
 
             notifyMovement(oldCoor, this.coor, this.color)
         }
 
         // reset landing coors only if action is not move up
         if (!(rowOrCol === 0 && magnitude === -1)) {
-            removeLandingCoors(this.TetrisMode)
-            makeLandingCoors(this.TetrisMode)
+            UIService.RemoveLandingCoors(this._Tetris.landingCoors, this._Tetris.playingArea);
+            this._Tetris.updateLandingCoors()
+            UIService.ColorLandingCoors(this._Tetris.landingCoors, this.color, this._Tetris.playingArea)
         }
     }
 
-    moveRight = () => this.shiftCoor(1, 1)
+    MoveRight = () => this.ShiftCoor(1, 1)
 
-    moveLeft = () => this.shiftCoor(1, -1)
+    MoveLeft = () => this.ShiftCoor(1, -1)
 
-    moveUp = () => this.shiftCoor(0, -1)
+    MoveUp = () => this.ShiftCoor(0, -1)
 
-    upAllTheWay() {
+    UpAllTheWay() {
 
-        while (!this.hasHitTop()) this.moveUp()
-        this.coor = this.getOrientations()[this.orientationIDX];
+        while (!this.HasHitTop()) this.MoveUp()
+        this.coor = this.GetOrientations()[this.orientationIDX];
     }
 
-    adjustPiecePositionToBoundary() {
+    AdjustPiecePositionToBoundary() {
 
         this.coor.forEach(elementCoor => {
 
@@ -158,12 +162,12 @@ export abstract class TetrisPiece {
 
             if (elementCoor[1] < 0) this.centerCoor[1] -= elementCoor[1];
         })
-        this.coor = this.getOrientations()[this.orientationIDX];
+        this.coor = this.GetOrientations()[this.orientationIDX];
     }
 }
 
 class I extends TetrisPiece {
-    protected getOrientations(): [number, number][][] {
+    protected GetOrientations(): [number, number][][] {
         return [
             [[1, 0], [0, 0], [-1, 0], [-2, 0]],
             [[0, -1], [0, 0], [0, 1], [0, 2]]
@@ -172,7 +176,7 @@ class I extends TetrisPiece {
 }
 
 class J extends TetrisPiece {
-    protected getOrientations(): [number, number][][] {
+    protected GetOrientations(): [number, number][][] {
         return [
             [[-1, 0], [0, 1], [0, 0], [0, 2]],
             [[0, 0], [0, 1], [2, 0], [1, 0]],
@@ -183,7 +187,7 @@ class J extends TetrisPiece {
 }
 
 class O extends TetrisPiece {
-    protected getOrientations(): [number, number][][] {
+    protected GetOrientations(): [number, number][][] {
         return [
             [[0, 0], [-1, 0], [0, 1], [-1, 1]]
         ].map(orient => orient.map(([r, c]) => [this.centerCoor[0] + r, this.centerCoor[1] + c] as [number, number]));
@@ -191,7 +195,7 @@ class O extends TetrisPiece {
 }
 
 class Z extends TetrisPiece {
-    protected getOrientations(): [number, number][][] {
+    protected GetOrientations(): [number, number][][] {
         return [
             [[-1, -1], [-1, 0], [0, 0], [0, 1]],
             [[1, -1], [0, -1], [0, 0], [-1, 0]]
@@ -200,7 +204,7 @@ class Z extends TetrisPiece {
 }
 
 class L extends TetrisPiece {
-    protected getOrientations(): [number, number][][] {
+    protected GetOrientations(): [number, number][][] {
         return [
             [[-1, 0], [0, 0], [0, -1], [0, -2]],
             [[-2, 0], [-1, 0], [0, 0], [0, 1]],
@@ -211,7 +215,7 @@ class L extends TetrisPiece {
 }
 
 class S extends TetrisPiece {
-    protected getOrientations(): [number, number][][] {
+    protected GetOrientations(): [number, number][][] {
         return [
             [[0, 0], [0, 1], [1, 0], [1, -1]],
             [[0, 1], [0, 0], [-1, 0], [1, 1]]
@@ -220,7 +224,7 @@ class S extends TetrisPiece {
 }
 
 class T extends TetrisPiece {
-    protected getOrientations(): [number, number][][] {
+    protected GetOrientations(): [number, number][][] {
         return [
             [[0, -1], [0, 1], [0, 0], [-1, 0]],
             [[-1, 0], [1, 0], [0, 0], [0, 1]],

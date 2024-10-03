@@ -1,5 +1,5 @@
 import { Tetris } from "../core/Tetris.js"
-import { ROWS_DISPLAYABLE } from "../utils/consts.js"
+import { ROWS_DISPLAYABLE } from "../consts.js"
 
 export class HomeBackgroundConfig extends Tetris {
 
@@ -7,7 +7,7 @@ export class HomeBackgroundConfig extends Tetris {
         this.setupPlayingArea()
 
         this.playingArea.style.display = "block"
-        this.startNextRound()
+        this.StartNextRound()
     }
 
     constructor(mainArea: HTMLElement) {
@@ -24,7 +24,7 @@ export class HomeBackgroundConfig extends Tetris {
 
         this.playingArea = panel
 
-        this.addRowsForSetup(panel)
+        this.AddRowsForSetup(panel)
 
         this.mainArea.appendChild(panel)
     }

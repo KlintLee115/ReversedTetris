@@ -1,6 +1,6 @@
 import {HubConnectionState} from "@microsoft/signalr";
-import { COLORS } from "./consts";
 import { connection } from "./signalR";
+import { COLORS } from "../../consts";
 
 export function sendAMessage() {
     if (connection && connection.state === HubConnectionState.Connected) {

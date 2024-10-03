@@ -1,5 +1,5 @@
 import {HubConnectionBuilder} from "@microsoft/signalr";
-import { API_URL } from "./consts.ts";
+import { API_URL } from "../../consts";
 
 export let connection: signalR.HubConnection;
 
