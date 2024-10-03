@@ -1,4 +1,5 @@
 import { Tetris } from "../core/Tetris.js"
+import { ROWS_DISPLAYABLE } from "../utils/consts.js"
 
 export class HomeBackgroundConfig extends Tetris {
 
@@ -10,7 +11,7 @@ export class HomeBackgroundConfig extends Tetris {
     }
 
     constructor(mainArea: HTMLElement) {
-        super(mainArea, 50)
+        super(mainArea, 50, ROWS_DISPLAYABLE)
 
         this.customSetup()
     }

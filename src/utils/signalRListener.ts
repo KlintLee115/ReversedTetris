@@ -25,7 +25,8 @@ export async function setupSignalREventListeners(game: Game) {
     })
 
     connection.on("You Won", () => {
-        game.hasWon = true
+        window.removeEventListener('keydown', game.inGameListenerBound)
+
         clearInterval(game.currInterval)
         alert("You Won!")
         game.pauseScreen.style.display = "none"

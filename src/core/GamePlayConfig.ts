@@ -1,32 +1,32 @@
 import { Tetris } from './Tetris.ts'
-import { COLORS, DEFAULT_COLOR } from '../utils/consts.js'
+import { COLORS, DEFAULT_COLOR, ROWS_DISPLAYABLE } from '../utils/consts.js'
 import { colorBlock } from '../utils/colors.ts'
 
 export type GameModeType = "Friend" | "Solo"
 
 export class Game extends Tetris {
-    private isPaused = false
     private continueButton: HTMLElement
     private keyPressInterval: ReturnType<typeof setInterval>
     private currMusic: HTMLAudioElement
     private bgMusic1: HTMLAudioElement
     private bgMusic2: HTMLAudioElement
 
+    public inGameListenerBound: (event: KeyboardEvent) => void;
     public GameMode: GameModeType
     public waitingForFriendStatus: HTMLElement
     public waitingForFriendCountdown: HTMLElement
     public sideArea: HTMLElement | null = null
     public pauseScreen: HTMLElement
-    public hasWon = false
 
     constructor(mainArea: HTMLElement, pauseScreen: HTMLElement, continueButton: HTMLElement, waitingForFriendStatus: HTMLElement, waitingForFriendCountdown: HTMLElement) {
-        super(mainArea, 500)
+        super(mainArea, 500, Math.floor(ROWS_DISPLAYABLE * 0.9))
 
         this.pauseScreen = pauseScreen
         this.continueButton = continueButton
         this.waitingForFriendStatus = waitingForFriendStatus
         this.waitingForFriendCountdown = waitingForFriendCountdown
         this.keyPressInterval = NaN
+        this.inGameListenerBound = this.inGameListener.bind(this);
 
         this.bgMusic1 = document.getElementById('backgroundMusic1') as HTMLAudioElement
         this.bgMusic2 = document.getElementById('backgroundMusic2') as HTMLAudioElement
@@ -109,30 +109,26 @@ export class Game extends Tetris {
         this.currMusic.play()
 
         for (let i = 0; i < 2; i++) {
+            const isPlayingArea = i === 0
 
             if (this.GameMode === "Friend") {
                 const panel = this.createPlayingPanel()
                 this.mainArea.appendChild(panel)
-                if (i === 0) this.playingArea = panel
-                else this.sideArea = panel
+                isPlayingArea ? (this.playingArea = panel) : (this.sideArea = panel)
             }
 
+            else if (isPlayingArea) {
+                this.playingArea = this.createPlayingPanel()
+                this.mainArea.appendChild(this.playingArea)
+            }
             else {
-                if (i === 0) {
-                    this.playingArea = this.createPlayingPanel()
-                    this.mainArea.appendChild(this.playingArea)
-                }
-                else {
-
-                    const { createLeaderboardPanel } = await import('../utils/leaderboard.ts')
-
-                    this.sideArea = createLeaderboardPanel()
-                    this.mainArea.appendChild(this.sideArea)
-                }
+                const { createLeaderboardPanel } = await import('../utils/leaderboard.ts')
+                this.sideArea = createLeaderboardPanel()
+                this.mainArea.appendChild(this.sideArea)
             }
         }
 
-        window.addEventListener('keydown', event => this.inGameListener(event))
+        window.addEventListener('keydown', this.inGameListenerBound)
         window.addEventListener('keyup', () => {
             if (!isNaN(this.keyPressInterval)) {
                 clearInterval(this.keyPressInterval)
@@ -157,22 +153,20 @@ export class Game extends Tetris {
     public togglePause() {
 
         clearInterval(this.currInterval)
-        this.currMusic.pause()
+        window.removeEventListener('keydown', this.inGameListenerBound)
 
-        if (this.hasWon || this.hasLost) return
+        this.currMusic.pause()
 
         this.pauseScreen.style.display = "block"
         this.waitingForFriendStatus.style.display = "none"
         this.mainArea.style.filter = "blur(10px)"
 
-        this.isPaused = true
-
     }
 
     public toggleContinue() {
 
+        window.addEventListener('keydown', this.inGameListenerBound)
         this.currMusic.play()
-        this.isPaused = false
         this.waitingForFriendStatus.style.display = "none"
         this.mainArea.style.filter = "none"
         this.mainArea.style.display = "flex"
@@ -183,8 +177,6 @@ export class Game extends Tetris {
     }
 
     private async inGameListener(listener: KeyboardEvent) {
-
-        if (this.hasLost || this.hasWon) return
 
         if (listener.code === 'Space') {
             this.currPiece.upAllTheWay();
@@ -210,10 +202,13 @@ export class Game extends Tetris {
 
         actions[listener.code]?.()
 
-        if (this.isPaused || !isNaN(this.keyPressInterval)) return
+        if (!isNaN(this.keyPressInterval)) return
 
-        const intervalTime = (listener.code === 'ArrowLeft' || listener.code === 'ArrowRight') ? 75 : listener.code === 'ArrowUp' ? 600 : undefined
-        if (!intervalTime) return
+        let intervalTime
+
+        if (["ArrowLeft", "ArrowRight"].includes(listener.code)) intervalTime = 75
+        else if (listener.code === "ArrowUp") intervalTime = 600
+        else return
 
         this.keyPressInterval = setTimeout(() => {
             this.keyPressInterval = setInterval(() => actions[listener.code]?.(), intervalTime)
