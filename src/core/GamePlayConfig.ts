@@ -18,7 +18,7 @@ export class Game extends Tetris {
     public pauseScreen: HTMLElement
 
     constructor(mainArea: HTMLElement, pauseScreen: HTMLElement, continueButton: HTMLElement, textStatus: HTMLElement) {
-        super(mainArea, 500, Math.floor(ROWS_DISPLAYABLE * 0.9))
+        super(mainArea, 500, Math.floor(ROWS_DISPLAYABLE * 0.7))
 
         this.pauseScreen = pauseScreen
         this.continueButton = continueButton
@@ -56,7 +56,7 @@ export class Game extends Tetris {
 
                 const { startSignalRConnection } = await import('../Services/signalR/signalR.ts')
                 const { joinRoom } = await import('../Services/signalR/signalRSenders.ts')
-                
+
                 const { shouldGameStart, setupSignalRSetupListeners } = await import('../Services/signalR/signalRPreGameListener.ts')
                 const { setupSignalRGameListeners } = await import('../Services/signalR/signalRGameListener.ts')
 
@@ -78,16 +78,17 @@ export class Game extends Tetris {
             })()
         }
 
-        window.onblur = async () => {
+        window.addEventListener('blur', this.handleBlur)
+    }
 
-            if (this.GameMode === "Solo") return
+    public handleBlur = async () => {
+        if (this.GameMode === "Solo") return
 
-            this.togglePause()
+        this.togglePause()
 
-            const { notifyPause } = await import("../Services/signalR/signalRSenders.ts")
+        const { notifyPause } = await import("../Services/signalR/signalRSenders.ts")
 
-            notifyPause()
-        }
+        notifyPause()
     }
 
     private createPlayingPanel() {
@@ -115,9 +116,24 @@ export class Game extends Tetris {
             const isPlayingArea = i === 0
 
             if (this.GameMode === "Friend") {
-                const panel = this.createPlayingPanel()
-                this.mainArea.appendChild(panel)
-                isPlayingArea ? (this.playingArea = panel) : (this.sideArea = panel)
+                const tetrisPanel = this.createPlayingPanel()
+                const containerPanel = document.createElement('div')
+                const heading = document.createElement('h2')
+                heading.style.textAlign = 'center'
+
+                if (isPlayingArea) {
+                    heading.innerText = "Your area"
+                    this.playingArea = tetrisPanel
+                }
+                else {
+                    heading.innerText = "Friend's area"
+                    this.sideArea = tetrisPanel
+                }
+
+                containerPanel.appendChild(heading)
+                containerPanel.appendChild(tetrisPanel)
+
+                this.mainArea.appendChild(containerPanel)
             }
 
             else if (isPlayingArea) {

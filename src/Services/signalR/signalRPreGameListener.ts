@@ -7,6 +7,7 @@ export async function setupSignalRSetupListeners(game: Game) {
 
     connection.on("LeaveGame", () => {
         clearInterval(interval)
+        window.removeEventListener('blur', game.handleBlur)
         alert('Your friend has left the game.')
         game.textStatus.style.display = "block"
         game.textStatus.innerText = "Your friend has left the game."
@@ -44,6 +45,7 @@ export function shouldGameStart(game: Game): Promise<void> {
         connection.on('PreGameCountdownShouldStart', async () => {
             await preGameCountDown(game)
             connection.off('Continue')
+            connection.off('LeaveGame')
             resolve()
         })
     })

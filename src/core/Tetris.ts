@@ -146,7 +146,9 @@ export abstract class Tetris {
                 const { Game } = await import('./GamePlayConfig.ts')
 
                 if (this instanceof Game) {
-                    alert("Game Over")
+
+                    window.removeEventListener('blur', this.handleBlur)
+
                     if (this.GameMode === "Friend") {
 
                         window.removeEventListener('keydown', this.inGameListenerBound)
@@ -155,7 +157,10 @@ export abstract class Tetris {
 
                         await notifyGameOver()
                     }
+
                 }
+
+                alert("Game Over")
 
                 return false
             }

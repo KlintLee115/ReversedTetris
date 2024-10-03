@@ -1,5 +1,6 @@
 import { Tetris } from "../core/Tetris.js"
 import { ROWS_DISPLAYABLE } from "../consts.js"
+import { UIService } from "../Services/UiService.js"
 
 export class HomeBackgroundConfig extends Tetris {
 
@@ -24,7 +25,7 @@ export class HomeBackgroundConfig extends Tetris {
 
         this.playingArea = panel
 
-        this.AddRowsForSetup(panel)
+        UIService.AddRowsForSetup(ROWS_DISPLAYABLE, panel)
 
         this.mainArea.appendChild(panel)
     }

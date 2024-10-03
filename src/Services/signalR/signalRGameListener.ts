@@ -6,6 +6,7 @@ export async function setupSignalRGameListeners(game: Game) {
 
     connection.on("LeaveGame", () => {
         clearInterval(game.currInterval)
+        window.removeEventListener('blur', game.handleBlur)
         game.textStatus.style.display = "none"
         window.removeEventListener('keydown', game.inGameListenerBound)
     })
@@ -27,6 +28,7 @@ export async function setupSignalRGameListeners(game: Game) {
 
     connection.on("You Won", () => {
         window.removeEventListener('keydown', game.inGameListenerBound)
+        window.removeEventListener('blur', game.handleBlur)
 
         clearInterval(game.currInterval)
         alert("You Won!")
