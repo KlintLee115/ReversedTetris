@@ -199,7 +199,7 @@ export class Game extends Tetris {
     private async inGameListener(listener: KeyboardEvent) {
 
         if (listener.code === 'Space') {
-            this.currTetrimino.UpAllTheWay();
+            this.currTetromino.UpAllTheWay();
             this.ClearRound();
             this.StartNextRound();
 
@@ -207,10 +207,10 @@ export class Game extends Tetris {
         }
 
         const actions: { [key: string]: () => void } = {
-            ArrowLeft: () => this.currTetrimino.CanMoveLeft() && this.currTetrimino.MoveLeft(),
-            ArrowRight: () => this.currTetrimino.CanMoveRight() && this.currTetrimino.MoveRight(),
-            ArrowDown: () => this.currTetrimino.Rotate(),
-            ArrowUp: () => this.currTetrimino.CanMoveUp() && this.currTetrimino.MoveUp(),
+            ArrowLeft: () => this.currTetromino.CanMoveLeft() && this.currTetromino.MoveLeft(),
+            ArrowRight: () => this.currTetromino.CanMoveRight() && this.currTetromino.MoveRight(),
+            ArrowDown: () => this.currTetromino.Rotate(),
+            ArrowUp: () => this.currTetromino.CanMoveUp() && this.currTetromino.MoveUp(),
         }
 
         actions[listener.code]?.()
