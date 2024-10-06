@@ -37,7 +37,7 @@ export class Game extends Tetris {
         if (this.GameMode === "Solo") this.setupSoloMode()
         else this.setupFriendMode(gameId as string)
 
-        // window.addEventListener('blur', this.handleBlur)
+        window.addEventListener('blur', this.handleBlur)
     }
 
     private initializeMusic() {
@@ -203,7 +203,6 @@ export class Game extends Tetris {
             ArrowRight: () => this.currTetromino.CanMoveRight() && this.currTetromino.MoveRight(),
             ArrowDown: () => this.currTetromino.Rotate(),
             ArrowUp: () => this.currTetromino.CanMoveUp() && this.currTetromino.MoveUp(),
-            Enter: () => this.handleBlur()
         }
 
         actions[listener.code]?.()
