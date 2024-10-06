@@ -31,15 +31,19 @@ export abstract class Tetromino {
         this.orientationIDX = Math.floor(Math.random() * this.GetOrientations().length);
         this.coor = this.GetOrientations()[this.orientationIDX]
 
-        while (this.coor.some(([row, _]) => row >= tetris.rowsDisplayable + HIDDEN_ROWS)) {
-            this.centerCoor[0]--
-            this.coor = this.GetOrientations()[this.orientationIDX]
-        }
-
         this.AdjustPiecePositionToBoundary();
 
         if (Tetromino.CURR_COLOR_IDX === COLORS.length - 1) Tetromino.CURR_COLOR_IDX = 0
         else Tetromino.CURR_COLOR_IDX++
+    }
+
+    public IsMoveIntoPlayingAreaSuccess(tetris: Tetris): boolean {
+        while (this.coor.some(([row, _]) => row > tetris.rowsDisplayable)) {
+            if (this.HasHitTop()) return false
+            this.centerCoor[0]--
+            this.coor = this.GetOrientations()[this.orientationIDX]
+        }
+        return true
     }
 
     protected abstract GetOrientations(): [number, number][][]

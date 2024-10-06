@@ -15,8 +15,7 @@ export abstract class Tetris {
     public mainArea: HTMLElement
     public currScore = 0
 
-    protected currTetrominoID: number
-
+    private currTetrominoID: number
     private intervalBaseTime: number
 
     constructor(mainArea: HTMLElement, intervalBaseTime: number, rowsDisplayable: number) {
@@ -45,9 +44,11 @@ export abstract class Tetris {
         this.currTetrominoID += 1
         this.currTetromino = this.newPiece()
 
-        const isSuccess = await this.MovePieceIntoPlayingArea()
+        const isSuccess = this.currTetromino.IsMoveIntoPlayingAreaSuccess(this)
 
-        if (!isSuccess) return
+        UIService.ColorArea(this.currTetromino.coor, this.currTetrominoID, this.currTetromino.color, this.playingArea)
+
+        if (!isSuccess) return await this.handleGameOver(true, true)
 
         this.StartIntervals()
         this.updateLandingCoors()
@@ -135,41 +136,31 @@ export abstract class Tetris {
     }
 
 
-    private async MovePieceIntoPlayingArea(): Promise<boolean> {
+    // if shouldNotifyFriend, it also means that self has lost
 
-        while (this.currTetromino.coor.some(coor => coor[0] > this.rowsDisplayable)) {
+    public async handleGameOver(shouldNotifyFriend: boolean, hasLost: boolean | undefined): Promise<void> {
+        clearInterval(this.currInterval)
 
-            if (this.currTetromino.HasHitTop()) {
+        const { Game } = await import('./GamePlayConfig.ts')
 
-                clearInterval(this.currInterval)
+        if (!(this instanceof Game)) return
 
-                const { Game } = await import('./GamePlayConfig.ts')
+        window.removeEventListener('blur', this.handleBlur);
+        window.removeEventListener('keydown', this.inGameListenerBound);
 
-                if (this instanceof Game) {
-
-                    window.removeEventListener('blur', this.handleBlur)
-
-                    if (this.GameMode === "Friend") {
-
-                        window.removeEventListener('keydown', this.inGameListenerBound)
-
-                        const { notifyGameOver } = await import("../Services/signalR/signalRSenders.ts")
-
-                        await notifyGameOver()
-                    }
-
-                alert("Game Over")
-
-                }
-
-
-                return false
-            }
-            this.currTetromino.MoveUp()
+        if (shouldNotifyFriend) {
+            const { notifyGameOver } = await import("../Services/signalR/signalRSenders.ts");
+            await notifyGameOver()
+            alert("Game Over")
+            return
         }
 
-        UIService.ColorArea(this.currTetromino.coor, this.currTetrominoID, this.currTetromino.color, this.playingArea)
-        return true
+        if (hasLost === undefined) {
+            alert("Your friend has left the game.")
+            return
+        }
+
+        alert(hasLost ? "Game Over" : "You Won!")
     }
 
     public updateLandingCoors() {

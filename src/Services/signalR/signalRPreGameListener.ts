@@ -6,9 +6,7 @@ let interval: ReturnType<typeof setInterval>
 export async function setupSignalRSetupListeners(game: Game) {
 
     connection.on("LeaveGame", () => {
-        clearInterval(interval)
-        window.removeEventListener('blur', game.handleBlur)
-        alert('Your friend has left the game.')
+        game.handleGameOver(false, undefined)
         game.textStatus.style.display = "block"
         game.textStatus.innerText = "Your friend has left the game."
     })

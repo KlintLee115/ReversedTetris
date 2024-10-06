@@ -5,10 +5,8 @@ import { connection } from "./signalR"
 export async function setupSignalRGameListeners(game: Game) {
 
     connection.on("LeaveGame", () => {
-        clearInterval(game.currInterval)
-        window.removeEventListener('blur', game.handleBlur)
+        game.handleGameOver(false, undefined)
         game.textStatus.style.display = "none"
-        window.removeEventListener('keydown', game.inGameListenerBound)
     })
 
     connection.on("ReceiveMovement", (data: {
@@ -27,11 +25,7 @@ export async function setupSignalRGameListeners(game: Game) {
     })
 
     connection.on("You Won", () => {
-        window.removeEventListener('keydown', game.inGameListenerBound)
-        window.removeEventListener('blur', game.handleBlur)
-
-        clearInterval(game.currInterval)
-        alert("You Won!")
+        game.handleGameOver(false, false)
         game.pauseScreen.style.display = "none"
         game.mainArea.style.display = "flex"
     })

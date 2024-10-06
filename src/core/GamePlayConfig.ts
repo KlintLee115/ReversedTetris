@@ -7,18 +7,18 @@ export type GameModeType = "Friend" | "Solo"
 export class Game extends Tetris {
     private continueButton: HTMLElement
     private keyPressInterval: ReturnType<typeof setInterval>
-    private currMusic: HTMLAudioElement
-    private bgMusic1: HTMLAudioElement
-    private bgMusic2: HTMLAudioElement
+    private currMusic!: HTMLAudioElement
+    private bgMusic1!: HTMLAudioElement
+    private bgMusic2!: HTMLAudioElement
 
-    public inGameListenerBound: (event: KeyboardEvent) => void;
+    public inGameListenerBound: (event: KeyboardEvent) => void
     public GameMode: GameModeType
     public textStatus: HTMLElement
     public sideArea: HTMLElement | null = null
     public pauseScreen: HTMLElement
 
     constructor(mainArea: HTMLElement, pauseScreen: HTMLElement, continueButton: HTMLElement, textStatus: HTMLElement) {
-        super(mainArea, 500, Math.floor(ROWS_DISPLAYABLE * 0.7))
+        super(mainArea, 500, Math.floor(ROWS_DISPLAYABLE * 0.8))
 
         this.pauseScreen = pauseScreen
         this.continueButton = continueButton
@@ -26,59 +26,66 @@ export class Game extends Tetris {
         this.keyPressInterval = NaN
         this.inGameListenerBound = this.inGameListener.bind(this);
 
-        this.bgMusic1 = document.getElementById('backgroundMusic1') as HTMLAudioElement
-        this.bgMusic2 = document.getElementById('backgroundMusic2') as HTMLAudioElement
-        this.bgMusic1.addEventListener('ended', () => this.bgMusic2.play())
-        this.bgMusic2.addEventListener('ended', () => this.bgMusic1.play())
-
-        this.currMusic = this.bgMusic1
+        this.initializeMusic()
+        this.GameMode = this.getGameMode()
 
         const urlParams = new URLSearchParams(window.location.search)
         const gameId = urlParams.get('id')
 
         this.GameMode = gameId === null ? "Solo" : "Friend"
 
-        if (this.GameMode === "Solo") {
-            this.mainArea.style.justifyContent = "center"
-            this.mainArea.style.gap = "5vw"
+        if (this.GameMode === "Solo") this.setupSoloMode()
+        else this.setupFriendMode(gameId as string)
+
+        // window.addEventListener('blur', this.handleBlur)
+    }
+
+    private initializeMusic() {
+        this.bgMusic1 = document.getElementById('backgroundMusic1') as HTMLAudioElement
+        this.bgMusic2 = document.getElementById('backgroundMusic2') as HTMLAudioElement
+        this.loopMusic()
+        this.currMusic = this.bgMusic1
+    }
+
+    private loopMusic() {
+        this.bgMusic1.addEventListener('ended', () => this.bgMusic2.play())
+        this.bgMusic2.addEventListener('ended', () => this.bgMusic1.play())
+    }
+
+    private getGameMode(): GameModeType {
+        const gameId = new URLSearchParams(window.location.search).get('id');
+        return gameId ? "Friend" : "Solo"
+    }
+
+    private setupSoloMode() {
+        this.mainArea.style.justifyContent = "center";
+        this.mainArea.style.gap = "5vw";
+        this.setupPlayingArea();
+        this.playingArea.style.display = "block";
+        this.StartNextRound();
+    }
+
+    private async setupFriendMode(gameId: string) {
+        this.mainArea.style.justifyContent = "space-evenly"
+
+        this.textStatus.style.display = "block";
+
+        const { startSignalRConnection, joinRoom, setupSignalRSetupListeners, shouldGameStart, setupSignalRGameListeners } = await this.importSignalRServices()
+
+        await startSignalRConnection()
+        await setupSignalRSetupListeners(this)
+
+        joinRoom(gameId)
+
+        shouldGameStart(this).then(() => {
+            setupSignalRGameListeners(this)
             this.setupPlayingArea()
 
+            this.textStatus.style.display = "none"
             this.playingArea.style.display = "block"
+
             this.StartNextRound()
-        }
-
-        else {
-            this.mainArea.style.justifyContent = "space-evenly"
-
-            this.textStatus.style.display = "block";
-
-            (async () => {
-
-                const { startSignalRConnection } = await import('../Services/signalR/signalR.ts')
-                const { joinRoom } = await import('../Services/signalR/signalRSenders.ts')
-
-                const { shouldGameStart, setupSignalRSetupListeners } = await import('../Services/signalR/signalRPreGameListener.ts')
-                const { setupSignalRGameListeners } = await import('../Services/signalR/signalRGameListener.ts')
-
-                await startSignalRConnection()
-                await setupSignalRSetupListeners(this)
-
-                joinRoom(gameId as string)
-
-                shouldGameStart(this).then(() => {
-                    setupSignalRGameListeners(this)
-                    this.setupPlayingArea()
-
-                    this.textStatus.style.display = "none"
-                    this.playingArea.style.display = "block"
-
-                    this.StartNextRound()
-
-                })
-            })()
-        }
-
-        window.addEventListener('blur', this.handleBlur)
+        })
     }
 
     public handleBlur = async () => {
@@ -101,14 +108,8 @@ export class Game extends Tetris {
 
     override async setupPlayingArea() {
 
-        this.bgMusic1.addEventListener('ended', () => {
-            this.currMusic = this.bgMusic2
-            this.bgMusic2.play()
-        })
-        this.bgMusic2.addEventListener('ended', () => {
-            this.currMusic = this.bgMusic1
-            this.bgMusic1.play()
-        })
+        this.bgMusic1.addEventListener('ended', () => (this.currMusic = this.bgMusic2).play())
+        this.bgMusic2.addEventListener('ended', () => (this.currMusic = this.bgMusic1).play())
 
         this.currMusic.play()
 
@@ -120,19 +121,12 @@ export class Game extends Tetris {
                 const containerPanel = document.createElement('div')
                 const heading = document.createElement('h2')
                 heading.style.textAlign = 'center'
+                heading.innerText = isPlayingArea ? "Your area" : "Friend's area"
 
-                if (isPlayingArea) {
-                    heading.innerText = "Your area"
-                    this.playingArea = tetrisPanel
-                }
-                else {
-                    heading.innerText = "Friend's area"
-                    this.sideArea = tetrisPanel
-                }
+                if (isPlayingArea) this.playingArea = tetrisPanel
+                else this.sideArea = tetrisPanel
 
-                containerPanel.appendChild(heading)
-                containerPanel.appendChild(tetrisPanel)
-
+                containerPanel.append(heading, tetrisPanel)
                 this.mainArea.appendChild(containerPanel)
             }
 
@@ -149,26 +143,24 @@ export class Game extends Tetris {
 
         window.addEventListener('keydown', this.inGameListenerBound)
         window.addEventListener('keyup', () => {
-            if (!isNaN(this.keyPressInterval)) {
-                clearInterval(this.keyPressInterval)
-                this.keyPressInterval = NaN
-            }
+            clearInterval(this.keyPressInterval)
+            this.keyPressInterval = NaN
         })
 
         if (this.GameMode === "Friend") {
-
-            this.continueButton.addEventListener('click', async () => {
-                this.textStatus.innerText = "Waiting for friend"
-                this.textStatus.style.display = "block"
-                this.pauseScreen.style.display = "none"
-                this.mainArea.style.display = "none"
-
-                const { requestContinue } = await import("../Services/signalR/signalRSenders.ts")
-
-                requestContinue()
-            })
+            this.continueButton.addEventListener('click', this.handleContinueButtonClick)
         }
     }
+
+    private handleContinueButtonClick = async () => {
+        this.textStatus.innerText = "Waiting for friend";
+        this.textStatus.style.display = "block";
+        this.pauseScreen.style.display = "none";
+        this.mainArea.style.display = "none";
+
+        const { requestContinue } = await import("../Services/signalR/signalRSenders.ts");
+        requestContinue();
+    };
 
     public togglePause() {
 
@@ -211,17 +203,14 @@ export class Game extends Tetris {
             ArrowRight: () => this.currTetromino.CanMoveRight() && this.currTetromino.MoveRight(),
             ArrowDown: () => this.currTetromino.Rotate(),
             ArrowUp: () => this.currTetromino.CanMoveUp() && this.currTetromino.MoveUp(),
+            Enter: () => this.handleBlur()
         }
 
         actions[listener.code]?.()
 
-        if (!isNaN(this.keyPressInterval)) return
+        if (!isNaN(this.keyPressInterval) || !["ArrowLeft", "ArrowRight", "ArrowUp"].includes(listener.code)) return
 
-        let intervalTime
-
-        if (["ArrowLeft", "ArrowRight"].includes(listener.code)) intervalTime = 75
-        else if (listener.code === "ArrowUp") intervalTime = 600
-        else return
+        const intervalTime = listener.code === "ArrowUp" ? 600 : 75
 
         this.keyPressInterval = setTimeout(() => {
             this.keyPressInterval = setInterval(() => actions[listener.code]?.(), intervalTime)
@@ -236,6 +225,20 @@ export class Game extends Tetris {
 
     private updateFriendArea(coors: [number, number][], color: string) {
         coors.forEach(coor => UIService.ColorBlock(coor[0], coor[1], color, this.sideArea as HTMLElement))
+    }
+
+    private async importSignalRServices() {
+        return Promise.all([
+            import('../Services/signalR/signalR.ts'),
+            import('../Services/signalR/signalRSenders.ts'),
+            import('../Services/signalR/signalRPreGameListener.ts'),
+            import('../Services/signalR/signalRGameListener.ts')
+        ]).then(([signalR, signalRSenders, signalRPreGame, signalRGame]) => ({
+            ...signalR,
+            ...signalRSenders,
+            ...signalRPreGame,
+            ...signalRGame
+        }))
     }
 
 }
