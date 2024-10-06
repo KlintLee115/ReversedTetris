@@ -1,5 +1,5 @@
 import { UIService } from "../Services/UiService.ts";
-import { I, J, L, O, S, T, TetrisPiece, Z } from "./TetrisPiece.ts";
+import { I, J, L, O, S, T, Tetrimino, Z } from "./TetrisPiece.ts";
 import { BORDER_DEFAULT_COLOR, COLUMNS, DEFAULT_COLOR, HIDDEN_ROWS } from "../consts.ts";
 import { updateScoreIfHigher } from "../Services/LeaderboardService.ts";
 
@@ -8,32 +8,32 @@ const TETRIS_PIECES = [I, O, J, T, L, S, Z]
 export abstract class Tetris {
 
     public playingArea: HTMLElement
-    public currPiece: TetrisPiece
+    public currTetrimino: Tetrimino
     public landingCoors: [number, number][] = []
     public rowsDisplayable: number
     public currInterval: ReturnType<typeof setInterval>
     public mainArea: HTMLElement
     public currScore = 0
 
-    protected currPieceID: number
+    protected currTetriminoID: number
 
     private intervalBaseTime: number
 
     constructor(mainArea: HTMLElement, intervalBaseTime: number, rowsDisplayable: number) {
         this.mainArea = mainArea
         this.playingArea = document.createElement('div')
-        this.currPieceID = 0
+        this.currTetriminoID = 0
 
-        this.currPiece = this.newPiece()
+        this.currTetrimino = this.newPiece()
         this.currInterval = 0
         this.intervalBaseTime = intervalBaseTime
         this.rowsDisplayable = rowsDisplayable
     }
 
-    public GetLandingCoors(pieceId: number, currPieceCoors: [number, number][]): [number, number][] {
-        let updatedCoors = currPieceCoors
+    public GetLandingCoors(tetriminoId: number, currTetriminoCoors: [number, number][]): [number, number][] {
+        let updatedCoors = currTetriminoCoors
         while (true) {
-            if (updatedCoors.some(([row, col]) => row === 0 || (this.playingArea.children[row - 1].children[col] as HTMLElement).style.backgroundColor !== DEFAULT_COLOR && parseInt((this.playingArea.children[row - 1].children[col] as HTMLElement).id) !== pieceId)) {
+            if (updatedCoors.some(([row, col]) => row === 0 || (this.playingArea.children[row - 1].children[col] as HTMLElement).style.backgroundColor !== DEFAULT_COLOR && parseInt((this.playingArea.children[row - 1].children[col] as HTMLElement).id) !== tetriminoId)) {
                 return updatedCoors
             }
             updatedCoors = updatedCoors.map(([row, col]) => [row - 1, col])
@@ -42,8 +42,8 @@ export abstract class Tetris {
 
     protected async StartNextRound() {
 
-        this.currPieceID += 1
-        this.currPiece = this.newPiece()
+        this.currTetriminoID += 1
+        this.currTetrimino = this.newPiece()
 
         const isSuccess = await this.MovePieceIntoPlayingArea()
 
@@ -52,7 +52,7 @@ export abstract class Tetris {
         this.StartIntervals()
         this.updateLandingCoors()
 
-        UIService.ColorLandingCoors(this.landingCoors, this.currPiece.color, this.playingArea)
+        UIService.ColorLandingCoors(this.landingCoors, this.currTetrimino.color, this.playingArea)
     }
 
     protected GetCompletedRows(areaToCheck: HTMLElement) {
@@ -70,7 +70,7 @@ export abstract class Tetris {
 
         this.currInterval = setInterval(async () => {
 
-            if (this.currPiece.HasHitTop()) {
+            if (this.currTetrimino.HasHitTop()) {
 
                 clearInterval(this.currInterval)
                 this.ClearRows(this.playingArea)
@@ -78,9 +78,9 @@ export abstract class Tetris {
                 return
             }
 
-            this.currPiece.MoveUp()
+            this.currTetrimino.MoveUp()
 
-        }, this.intervalBaseTime - (20 * (Math.floor(this.currPieceID / 5))))
+        }, this.intervalBaseTime - (20 * (Math.floor(this.currTetriminoID / 5))))
     }
 
     protected ClearRound() {
@@ -137,9 +137,9 @@ export abstract class Tetris {
 
     private async MovePieceIntoPlayingArea(): Promise<boolean> {
 
-        while (this.currPiece.coor.some(coor => coor[0] > this.rowsDisplayable)) {
+        while (this.currTetrimino.coor.some(coor => coor[0] > this.rowsDisplayable)) {
 
-            if (this.currPiece.HasHitTop()) {
+            if (this.currTetrimino.HasHitTop()) {
 
                 clearInterval(this.currInterval)
 
@@ -165,18 +165,18 @@ export abstract class Tetris {
 
                 return false
             }
-            this.currPiece.MoveUp()
+            this.currTetrimino.MoveUp()
         }
 
-        UIService.ColorArea(this.currPiece.coor, this.currPieceID, this.currPiece.color, this.playingArea)
+        UIService.ColorArea(this.currTetrimino.coor, this.currTetriminoID, this.currTetrimino.color, this.playingArea)
         return true
     }
 
     public updateLandingCoors() {
-        this.landingCoors = this.GetLandingCoors(this.currPiece.GetId(), this.currPiece.coor)
+        this.landingCoors = this.GetLandingCoors(this.currTetrimino.GetId(), this.currTetrimino.coor)
     }
 
-    protected newPiece = () => new TETRIS_PIECES[Math.floor(Math.random() * TETRIS_PIECES.length)](this, this.currPieceID, this.playingArea)
+    protected newPiece = () => new TETRIS_PIECES[Math.floor(Math.random() * TETRIS_PIECES.length)](this, this.currTetriminoID, this.playingArea)
 
     abstract setupPlayingArea(): void
 

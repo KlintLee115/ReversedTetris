@@ -7,7 +7,7 @@ const COOR = {
     Col: 1
 };
 
-export abstract class TetrisPiece {
+export abstract class Tetrimino {
 
     private id: number;
     private static CURR_COLOR_IDX = 0;
@@ -23,7 +23,7 @@ export abstract class TetrisPiece {
     constructor(tetris: Tetris, newId: number, playingArea: HTMLElement) {
 
         this._Tetris = tetris
-        this.color = COLORS[TetrisPiece.CURR_COLOR_IDX];
+        this.color = COLORS[Tetrimino.CURR_COLOR_IDX];
         this.id = newId;
         this.playingArea = playingArea
 
@@ -38,8 +38,8 @@ export abstract class TetrisPiece {
 
         this.AdjustPiecePositionToBoundary();
 
-        if (TetrisPiece.CURR_COLOR_IDX === COLORS.length - 1) TetrisPiece.CURR_COLOR_IDX = 0
-        else TetrisPiece.CURR_COLOR_IDX++
+        if (Tetrimino.CURR_COLOR_IDX === COLORS.length - 1) Tetrimino.CURR_COLOR_IDX = 0
+        else Tetrimino.CURR_COLOR_IDX++
     }
 
     protected abstract GetOrientations(): [number, number][][]
@@ -166,7 +166,7 @@ export abstract class TetrisPiece {
     }
 }
 
-class I extends TetrisPiece {
+class I extends Tetrimino {
     protected GetOrientations(): [number, number][][] {
         return [
             [[1, 0], [0, 0], [-1, 0], [-2, 0]],
@@ -175,7 +175,7 @@ class I extends TetrisPiece {
     }
 }
 
-class J extends TetrisPiece {
+class J extends Tetrimino {
     protected GetOrientations(): [number, number][][] {
         return [
             [[-1, 0], [0, 1], [0, 0], [0, 2]],
@@ -186,7 +186,7 @@ class J extends TetrisPiece {
     }
 }
 
-class O extends TetrisPiece {
+class O extends Tetrimino {
     protected GetOrientations(): [number, number][][] {
         return [
             [[0, 0], [-1, 0], [0, 1], [-1, 1]]
@@ -194,7 +194,7 @@ class O extends TetrisPiece {
     }
 }
 
-class Z extends TetrisPiece {
+class Z extends Tetrimino {
     protected GetOrientations(): [number, number][][] {
         return [
             [[-1, -1], [-1, 0], [0, 0], [0, 1]],
@@ -203,7 +203,7 @@ class Z extends TetrisPiece {
     }
 }
 
-class L extends TetrisPiece {
+class L extends Tetrimino {
     protected GetOrientations(): [number, number][][] {
         return [
             [[-1, 0], [0, 0], [0, -1], [0, -2]],
@@ -214,7 +214,7 @@ class L extends TetrisPiece {
     }
 }
 
-class S extends TetrisPiece {
+class S extends Tetrimino {
     protected GetOrientations(): [number, number][][] {
         return [
             [[0, 0], [0, 1], [1, 0], [1, -1]],
@@ -223,7 +223,7 @@ class S extends TetrisPiece {
     }
 }
 
-class T extends TetrisPiece {
+class T extends Tetrimino {
     protected GetOrientations(): [number, number][][] {
         return [
             [[0, -1], [0, 1], [0, 0], [-1, 0]],
