@@ -1,5 +1,5 @@
 import { UIService } from "../Services/UiService.ts";
-import { I, J, L, O, S, T, Tetrimino, Z } from "./TetrisPiece.ts";
+import { I, J, L, O, S, T, Tetrimino, Z } from "./Tetrimino.ts";
 import { BORDER_DEFAULT_COLOR, COLUMNS, DEFAULT_COLOR, HIDDEN_ROWS } from "../consts.ts";
 import { updateScoreIfHigher } from "../Services/LeaderboardService.ts";
 
