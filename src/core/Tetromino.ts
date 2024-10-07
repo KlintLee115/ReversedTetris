@@ -61,33 +61,32 @@ export abstract class Tetromino {
     }
 
     async Rotate() {
+        const orientations = this.GetOrientations()
 
-        const newOrientationIdx = this.orientationIDX === this.GetOrientations().length - 1 ? 0 : this.orientationIDX + 1;
+        const newOrientationIdx = this.orientationIDX === orientations.length - 1 ? 0 : this.orientationIDX + 1;
 
-        const newCoor = this.GetOrientations()[newOrientationIdx];
+        const newCoor = orientations[newOrientationIdx];
 
         for (let moveUnit = 0; moveUnit < 4; moveUnit++) {
-            const leftMove = newCoor.map(([row, col]) => [row, col - moveUnit] as [number, number]);
-            const rightMove = newCoor.map(([row, col]) => [row, col + moveUnit] as [number, number]);
+            const leftMove = newCoor.map(([row, col]) => [row, col - moveUnit] as [number, number])
+            const rightMove = newCoor.map(([row, col]) => [row, col + moveUnit] as [number, number])
 
-            if (this.CanMove(leftMove)) return this.ApplyRotation(-moveUnit, leftMove, newOrientationIdx);
-            if (this.CanMove(rightMove)) return this.ApplyRotation(moveUnit, rightMove, newOrientationIdx);
+            if (this.CanMove(leftMove)) return this.ApplyRotation(-moveUnit, newOrientationIdx);
+            if (this.CanMove(rightMove)) return this.ApplyRotation(moveUnit, newOrientationIdx);
         }
     }
 
-    private async ApplyRotation(moveUnit: number, newCoor: [number, number][], newOrientationIdx: number) {
+    private async ApplyRotation(moveUnit: number, newOrientationIdx: number) {
 
-        for (let i = 0; i < Math.abs(moveUnit); i++) {
-            if (moveUnit < 0) this.MoveLeft()
-            else this.MoveRight()
-        }
-
+        this.orientationIDX = newOrientationIdx;
         const oldCoor = this.coor
+
+        this.centerCoor[1] += moveUnit
 
         UIService.UncolorCoors(this.coor, this.playingArea)
 
-        this.orientationIDX = newOrientationIdx;
-        this.coor = newCoor;
+        this.coor = this.GetOrientations()[this.orientationIDX]
+        
         UIService.ColorArea(this.coor, this.GetId(), this.color, this.playingArea);
 
         const { Game } = await import('./GamePlayConfig')
