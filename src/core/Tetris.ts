@@ -148,7 +148,7 @@ export abstract class Tetris {
         window.removeEventListener('blur', this.handleBlur);
         window.removeEventListener('keydown', this.inGameListenerBound);
 
-        if (shouldNotifyFriend) {
+        if (this.GameMode === "Friend" && shouldNotifyFriend) {
             const { notifyGameOver } = await import("../Services/signalR/signalRSenders.ts");
             await notifyGameOver()
             alert("Game Over")
