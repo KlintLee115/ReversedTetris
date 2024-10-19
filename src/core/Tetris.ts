@@ -11,7 +11,7 @@ export abstract class Tetris {
     public currTetromino: Tetromino
     public landingCoors: [number, number][] = []
     public rowsDisplayable: number
-    public currInterval: ReturnType<typeof setInterval>
+    public currInterval: ReturnType<typeof setInterval> | undefined
     public mainArea: HTMLElement
     public currScore = 0
 
@@ -24,7 +24,7 @@ export abstract class Tetris {
         this.currTetrominoID = 0
 
         this.currTetromino = this.newPiece()
-        this.currInterval = 0
+        this.currInterval = undefined
         this.intervalBaseTime = intervalBaseTime
         this.rowsDisplayable = rowsDisplayable
     }
