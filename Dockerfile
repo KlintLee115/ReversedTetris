@@ -1,5 +1,5 @@
 # Use the official Node.js image as the base image
-FROM node:alpine3.20 as build
+FROM node:alpine3.20 AS build
 
 # Set the working directory
 WORKDIR /app
@@ -28,7 +28,7 @@ COPY --from=build app/package*.json /app/
 RUN npm install -g serve
 
 # Expose the port serve will run on
-EXPOSE 3000
+EXPOSE 5173
 
 # Command to run serve, serving the built files from the dist directory
-CMD ["serve", "-s", "dist", "-l", "3000"]
+CMD ["serve", "-s", "dist", "-l", "5173"]

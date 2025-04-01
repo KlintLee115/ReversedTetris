@@ -6,7 +6,7 @@ export type GameModeType = "Friend" | "Solo"
 
 export class Game extends Tetris {
     private continueButton: HTMLElement
-    private keyPressInterval: ReturnType<typeof setInterval>
+    private keyPressInterval: number | NodeJS.Timeout
     private currMusic!: HTMLAudioElement
     private bgMusic1!: HTMLAudioElement
     private bgMusic2!: HTMLAudioElement
@@ -207,7 +207,7 @@ export class Game extends Tetris {
 
         actions[listener.code]?.()
 
-        if (!isNaN(this.keyPressInterval) || !["ArrowLeft", "ArrowRight", "ArrowUp"].includes(listener.code)) return
+        if (!isNaN(this.keyPressInterval as number) || !["ArrowLeft", "ArrowRight", "ArrowUp"].includes(listener.code)) return
 
         const intervalTime = listener.code === "ArrowUp" ? 600 : 75
 
