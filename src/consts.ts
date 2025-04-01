@@ -20,7 +20,7 @@ export const ROWS_DISPLAYABLE = Math.round(screenHeightInPx / (cellHeightInPx+4)
 
 export const BACKGROUND_PANELS = Math.round(screenWidthInPx / (cellWidthInPx+4)) // +4 to account for border and margin
 
-const PROD_API_URL = "https://reversedtetrisapi.azurewebsites.net"
+const PROD_API_URL = "https://reversedtetrisapi-1069378730094.us-west2.run.app"
 const DEV_API_URL = "http://localhost:8080"
 
 export const API_URL = process.env.NODE_ENV === "development" ? DEV_API_URL : PROD_API_URL
