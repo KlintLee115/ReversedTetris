@@ -130,7 +130,7 @@ export abstract class Tetris {
         const { Game } = await import('./GamePlayConfig.ts')
 
         if (this instanceof Game && this.GameMode === "Friend") {
-            const { notifyClearRows } = await import("../Services/signalR/signalRSenders.ts")
+            const { notifyClearRows } = await import("../Services/ws/wsSenders.ts")
             notifyClearRows(completedRows)
         }
     }
@@ -149,7 +149,7 @@ export abstract class Tetris {
         window.removeEventListener('keydown', this.inGameListenerBound);
 
         if (this.GameMode === "Friend" && shouldNotifyFriend) {
-            const { notifyGameOver } = await import("../Services/signalR/signalRSenders.ts");
+            const { notifyGameOver } = await import("../Services/ws/wsSenders.ts");
             await notifyGameOver()
             alert("Game Over")
             return

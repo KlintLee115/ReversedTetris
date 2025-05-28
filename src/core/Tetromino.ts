@@ -92,7 +92,7 @@ export abstract class Tetromino {
         const { Game } = await import('./GamePlayConfig')
 
         if (this._Tetris instanceof Game && this._Tetris.GameMode === "Friend") {
-            const { notifyMovement } = await import('../Services/signalR/signalRSenders');
+            const { notifyMovement } = await import('../Services/ws/wsSenders');
             notifyMovement(oldCoor, this.coor, this.color);
         }
 
@@ -132,7 +132,7 @@ export abstract class Tetromino {
         const { Game } = await import('./GamePlayConfig')
 
         if (this._Tetris instanceof Game && this._Tetris.GameMode === "Friend") {
-            const { notifyMovement } = await import('../Services/signalR/signalRSenders')
+            const { notifyMovement } = await import('../Services/ws/wsSenders')
 
             notifyMovement(oldCoor, this.coor, this.color)
         }

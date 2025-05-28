@@ -70,15 +70,15 @@ export class Game extends Tetris {
 
         this.textStatus.style.display = "block";
 
-        const { startSignalRConnection, joinRoom, setupSignalRSetupListeners, shouldGameStart, setupSignalRGameListeners } = await this.importSignalRServices()
+        const { startWebSocketConnection, joinRoom, setupWebSocketSetupListeners, shouldGameStart, setupWebSocketGameListeners } = await this.importSignalRServices()
 
-        await startSignalRConnection()
-        await setupSignalRSetupListeners(this)
+        await startWebSocketConnection()
+        setupWebSocketSetupListeners(this)
 
         joinRoom(gameId)
 
         shouldGameStart(this).then(() => {
-            setupSignalRGameListeners(this)
+            setupWebSocketGameListeners(this)
             this.setupPlayingArea()
 
             this.textStatus.style.display = "none"
@@ -93,7 +93,7 @@ export class Game extends Tetris {
 
         this.togglePause()
 
-        const { notifyPause } = await import("../Services/signalR/signalRSenders.ts")
+        const { notifyPause } = await import("../Services/ws/wsSenders.ts")
 
         notifyPause()
     }
@@ -158,7 +158,7 @@ export class Game extends Tetris {
         this.pauseScreen.style.display = "none";
         this.mainArea.style.display = "none";
 
-        const { requestContinue } = await import("../Services/signalR/signalRSenders.ts");
+        const { requestContinue } = await import("../Services/ws/wsSenders.ts");
         requestContinue();
     };
 
@@ -228,10 +228,10 @@ export class Game extends Tetris {
 
     private async importSignalRServices() {
         return Promise.all([
-            import('../Services/signalR/signalR.ts'),
-            import('../Services/signalR/signalRSenders.ts'),
-            import('../Services/signalR/signalRPreGameListener.ts'),
-            import('../Services/signalR/signalRGameListener.ts')
+            import('../Services/ws/websocket.ts'),
+            import('../Services/ws/wsSenders.ts'),
+            import('../Services/ws/wsGameSetupListener.ts'),
+            import('../Services/ws/wsGameListener.ts')
         ]).then(([signalR, signalRSenders, signalRPreGame, signalRGame]) => ({
             ...signalR,
             ...signalRSenders,
