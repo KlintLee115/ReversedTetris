@@ -42,7 +42,7 @@ func main() {
 	mux.Handle("/api/MessageHub", websocket.Handler(messageHub.HandleWebSocket))
 	mux.Handle("/", staticHandler(staticDir))
 
-	log.Fatal(http.ListenAndServe(":8080", mux))
+	log.Fatal(http.ListenAndServe(":80", mux))
 }
 
 func staticHandler(staticDir string) http.Handler {
