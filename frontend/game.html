@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <title>Reversed Tetris</title>
+    <link rel="stylesheet" href="./src/style.css">
+    <style>
+        * {
+            font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif
+        }
+
+        #textStatus,
+        #pauseScreen {
+            text-align: center;
+            transform: translate(-50%, -50%);
+            display: none;
+            position: absolute;
+            top: 40%;
+            left: 50%;
+        }
+
+        #pauseScreen {
+            z-index: 3;
+            background-color: rgba(0, 0, 0, 0.85);
+            padding: 18px 28px;
+            border-radius: 12px;
+            border: 2px solid #646cff;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+        }
+
+        #continueButton {
+            background-color: #646cff;
+            color: white;
+            border: 2px solid #646cff;
+            padding: 12px 28px;
+            font-size: 1.05em;
+            font-weight: 600;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+
+        #textStatus {
+            font-size: 50px;
+        }
+    </style>
+</head>
+
+<body style="display: flex; justify-content: center;">
+    <audio id="backgroundMusic1" src="./tetris-theme-korobeiniki-rearranged-arr-for-strings-185592.mp3"
+        autoplay></audio>
+    <audio id="backgroundMusic2" src="./retro-game-arcade-236133.mp3" autoplay></audio>
+    <div id="pauseScreen">
+        <button id="continueButton">Continue</button>
+    </div>
+    <button id="pauseButton" style="display: none; position: absolute; top: 20px; right: 20px; z-index: 2; padding: 12px 24px; font-size: 1.1em; font-weight: 600; background-color: #ff4444; color: white; border: 2px solid #ff0000; border-radius: 8px; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 8px rgba(255, 0, 0, 0.3);">Pause</button>
+    <h3 id="textStatus">Waiting for friend</h3>
+    <main style="display: flex; width: 100vw; margin-top: 30px;">
+    </main>
+</body>
+<script type="module" src="./src/gamepage/index.ts"></script>
+
+</html>

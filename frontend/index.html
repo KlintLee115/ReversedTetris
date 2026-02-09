@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <title>Reversed Tetris</title>
+  <style>
+    .mode-button {
+      border: 1px solid gray;
+      padding: 0.6em 1.2em;
+    }
+  </style>
+</head>
+
+<body>
+  <audio id="backgroundMusic1" src="./tetris-theme-korobeiniki-rearranged-arr-for-strings-185592.mp3" autoplay></audio>
+  <section id="background"></section>
+  <main id="home">
+    <h2>Welcome to Tetris, but Reversed</h2>
+    <p>To rotate a piece, press &darr;</p>
+    <p>To move the piece to the top instantly, press space bar</p>
+    <p>To move the piece up, press &uarr;</p>
+    <p>Select your game mode below</p>
+
+    <div style="display: flex; justify-content: space-evenly; margin-top: 50px;">
+      <button class="mode-button" id="solo-button">SOLO</button>
+      <button class="mode-button" id="friend-button">PLAY WITH FRIEND</button>
+    </div>
+
+    <section id="friend-section" style="display: none;">
+      <div style="margin-top: 40px; display: flex; align-items: center; justify-content: center; gap: 20px;">
+        <label for="">Room ID: </label>
+        <input id="enteredRoomId" />
+        <button style="border: 1px solid black;" id="joinEnteredRoomIdButton" disabled>Join</button>
+      </div>
+
+      <div style="margin-top: 40px; display: flex; align-items: center; justify-content: center; gap: 20px;">
+        <button style="border: 1px solid black;" id="generateRoomIdButton">Generate room ID</button>
+        <h4 id="generatedRoomId"></h4>
+        <button style="border: 1px solid black; display: none;" id="joinGeneratedRoomButton">Join</button>
+      </div>
+    </section>
+
+  </main>
+
+</body>
+<script type="module" src="./src/home/index.ts"></script>
+<script type="module" src="./src/home/background.ts"></script>
+<link rel="stylesheet" href="./src/style.css">
+
+</html>

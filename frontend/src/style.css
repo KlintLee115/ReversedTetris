@@ -1,0 +1,77 @@
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #242424;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  overflow: hidden;
+  background-color: #242424;
+  color: rgba(255, 255, 255, 0.87);
+}
+
+main#home {
+  border-radius: 5%;
+  box-shadow: 0px 0px 39px 60px rgba(0, 0, 0, 0.38);
+  text-align: center;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding-block: 40px;
+  padding-inline: 60px;
+  position: absolute;
+  z-index: 20;
+  background-color: black;
+}
+
+button {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: #1a1a1a;
+  cursor: pointer;
+  transition: border-color 0.25s;
+  color: rgba(255, 255, 255, 0.87);
+}
+
+button:hover {
+  border-color: #646cff;
+}
+
+button:focus,
+button:focus-visible {
+  outline: 4px auto -webkit-focus-ring-color;
+}
+
+@media only screen and (max-width: 768px) {
+  /* Hide all content on mobile */
+  body * {
+    display: none !important;
+  }
+
+  /* Display message for mobile devices */
+  body::before {
+    content: "Game is only for desktop screen sizes";
+    display: block;
+    font-size: 1.5em;
+    text-align: center;
+    margin-top: 50vh;
+    transform: translateY(-50%);
+    font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  }
+}
