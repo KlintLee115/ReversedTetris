@@ -49,6 +49,8 @@ func staticHandler(staticDir string) http.Handler {
 	fileServer := http.FileServer(http.Dir(staticDir))
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Cache-Control", "public, max-age=3600, s-maxage=86400")
+
 		switch r.URL.Path {
 		case "/":
 			http.ServeFile(w, r, filepath.Join(staticDir, "index.html"))
